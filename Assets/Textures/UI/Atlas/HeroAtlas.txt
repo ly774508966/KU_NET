@@ -1,0 +1,196 @@
+{"frames": {
+
+"arkzs.png":
+{
+	"frame": {"x":250,"y":1048,"w":215,"h":204},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":215,"h":204},
+	"sourceSize": {"w":215,"h":204}
+},
+"bg_white.png":
+{
+	"frame": {"x":1021,"y":266,"w":2,"h":2},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":2,"h":2},
+	"sourceSize": {"w":2,"h":2}
+},
+"bjnw.png":
+{
+	"frame": {"x":811,"y":1,"w":210,"h":264},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":210,"h":264},
+	"sourceSize": {"w":210,"h":264}
+},
+"bmgdj.png":
+{
+	"frame": {"x":1,"y":833,"w":248,"h":218},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":6,"w":248,"h":218},
+	"sourceSize": {"w":248,"h":232}
+},
+"bwhss.png":
+{
+	"frame": {"x":466,"y":1,"w":344,"h":314},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":344,"h":314},
+	"sourceSize": {"w":344,"h":314}
+},
+"cjlws.png":
+{
+	"frame": {"x":558,"y":707,"w":272,"h":255},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":272,"h":255},
+	"sourceSize": {"w":272,"h":255}
+},
+"djxc.png":
+{
+	"frame": {"x":769,"y":963,"w":227,"h":211},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":0,"w":227,"h":211},
+	"sourceSize": {"w":247,"h":213}
+},
+"dyjr.png":
+{
+	"frame": {"x":338,"y":341,"w":280,"h":207},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":280,"h":207},
+	"sourceSize": {"w":280,"h":207}
+},
+"flw.png":
+{
+	"frame": {"x":526,"y":963,"w":242,"h":284},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":242,"h":284},
+	"sourceSize": {"w":242,"h":284}
+},
+"heroskill_bg1.png":
+{
+	"frame": {"x":1,"y":1,"w":464,"h":118},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":464,"h":118},
+	"sourceSize": {"w":464,"h":118}
+},
+"heroskill_bg2.png":
+{
+	"frame": {"x":632,"y":316,"w":170,"h":82},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":170,"h":82},
+	"sourceSize": {"w":170,"h":82}
+},
+"heroskill_bg3.png":
+{
+	"frame": {"x":338,"y":316,"w":293,"h":24},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":293,"h":24},
+	"sourceSize": {"w":293,"h":24}
+},
+"heroskill_bg4.png":
+{
+	"frame": {"x":338,"y":120,"w":82,"h":28},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":82,"h":28},
+	"sourceSize": {"w":82,"h":28}
+},
+"jds.png":
+{
+	"frame": {"x":1,"y":120,"w":336,"h":289},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":30,"y":0,"w":336,"h":289},
+	"sourceSize": {"w":366,"h":297}
+},
+"lnfs.png":
+{
+	"frame": {"x":811,"y":266,"w":209,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":209,"h":187},
+	"sourceSize": {"w":209,"h":187}
+},
+"mhmn.png":
+{
+	"frame": {"x":619,"y":454,"w":278,"h":252},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":278,"h":252},
+	"sourceSize": {"w":278,"h":252}
+},
+"ntrqz.png":
+{
+	"frame": {"x":1,"y":603,"w":275,"h":229},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":275,"h":229},
+	"sourceSize": {"w":275,"h":229}
+},
+"qqms.png":
+{
+	"frame": {"x":769,"y":1175,"w":225,"h":222},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":225,"h":222},
+	"sourceSize": {"w":225,"h":222}
+},
+"sylyt.png":
+{
+	"frame": {"x":277,"y":815,"w":248,"h":232},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":248,"h":232},
+	"sourceSize": {"w":248,"h":232}
+},
+"wlqs.png":
+{
+	"frame": {"x":1,"y":1052,"w":208,"h":288},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":208,"h":288},
+	"sourceSize": {"w":208,"h":288}
+},
+"xkdm.png":
+{
+	"frame": {"x":1,"y":410,"w":280,"h":192},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":280,"h":192},
+	"sourceSize": {"w":280,"h":192}
+},
+"xyjjs.png":
+{
+	"frame": {"x":282,"y":549,"w":275,"h":265},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":275,"h":265},
+	"sourceSize": {"w":275,"h":265}
+},
+"zdss.png":
+{
+	"frame": {"x":466,"y":1248,"w":205,"h":214},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":205,"h":214},
+	"sourceSize": {"w":205,"h":214}
+}},
+"meta": {
+	"app": "http://www.texturepacker.com",
+	"version": "1.0",
+	"image": "HeroAtlas.png",
+	"format": "RGBA8888",
+	"size": {"w":1024,"h":2048},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:6e8d130e14d1c84f124f0eb6f9890ba4$"
+}
+}

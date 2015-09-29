@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+	<ProductVersion>10.0.20506</ProductVersion>
+	<SchemaVersion>2.0</SchemaVersion>
+	<ProjectGuid>{BEF53634-7DAD-ED7F-1C90-982D32744ACF}</ProjectGuid>
+	<OutputType>Library</OutputType>
+	<AppDesignerFolder>Properties</AppDesignerFolder>
+	<RootNamespace></RootNamespace>
+	<AssemblyName>Assembly-CSharp</AssemblyName>
+	<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+	<FileAlignment>512</FileAlignment>
+	<BaseDirectory>Assets</BaseDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	<DebugSymbols>true</DebugSymbols>
+	<DebugType>full</DebugType>
+	<Optimize>false</Optimize>
+	<OutputPath>Temp\bin\Debug\</OutputPath>
+	<DefineConstants>DEBUG;TRACE;UNITY_5_0_0;UNITY_5_0;UNITY_STANDALONE_OSX;ENABLE_MICROPHONE;ENABLE_TEXTUREID_MAP;ENABLE_UNITYEVENTS;UNITY_STANDALONE;ENABLE_OBSOLETE_API_UPDATING;ENABLE_SPRITES;ENABLE_SUBSTANCE;ENABLE_GENERICS;ENABLE_MOVIES;ENABLE_MULTIPLE_DISPLAYS;ENABLE_WWW;ENABLE_PHYSICS_PHYSX3;ENABLE_RUNTIME_GI;ENABLE_WEBCAM;INCLUDE_METROSUPPORT;ENABLE_CACHING;ENABLE_FRAME_DEBUGGER;ENABLE_SHADOWS;ENABLE_DUCK_TYPING;ENABLE_SINGLE_INSTANCE_BUILD_SETTING;ENABLE_LIGHT_PROBES_LEGACY;ENABLE_TERRAIN;INCLUDE_WP8SUPPORT;INCLUDE_IL2CPP;ENABLE_IMAGEEFFECTS;ENABLE_4_6_FEATURES;INCLUDE_WP_BLUE_SUPPORT;PLATFORM_SUPPORTS_MONO;INCLUDE_DYNAMIC_GI;ENABLE_PLUGIN_INSPECTOR;RENDER_SOFTWARE_CURSOR;ENABLE_PHYSICS;ENABLE_NEW_HIERARCHY;ENABLE_CLOTH;ENABLE_GAMECENTER;ENABLE_2D_PHYSICS;ENABLE_HOME_SCREEN;INCLUDE_GI;ENABLE_AUDIO;ENABLE_MONO;ENABLE_PROFILER;UNITY_EDITOR;UNITY_EDITOR_OSX;UNITY_TEAM_LICENSE;UNITY_PRO_LICENSE</DefineConstants>
+	<ErrorReport>prompt</ErrorReport>
+	<WarningLevel>4</WarningLevel>
+	<NoWarn>0169</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	<DebugType>pdbonly</DebugType>
+	<Optimize>true</Optimize>
+	<OutputPath>Temp\bin\Release\</OutputPath>
+	<DefineConstants>TRACE</DefineConstants>
+	<ErrorReport>prompt</ErrorReport>
+	<WarningLevel>4</WarningLevel>
+	<NoWarn>0169</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+	<Reference Include="System" />
+    <Reference Include="System.XML" />
+	<Reference Include="System.Core" />
+	<Reference Include="System.Xml.Linq" />
+	<Reference Include="UnityEngine">
+	  <HintPath>/Applications/Unity/Unity.app/Contents/Frameworks/Managed/UnityEngine.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityEditor">
+	  <HintPath>/Applications/Unity/Unity.app/Contents/Frameworks/Managed/UnityEditor.dll</HintPath>
+	</Reference>
+  </ItemGroup>
+  <ItemGroup>
+     <Compile Include="Assets\KU_NET\Examples\Manager.cs" />
+     <Compile Include="Assets\KU_NET\Examples\TestMM.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\AbstractNetUnit.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\ActivityEvent.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\AsyncSocket.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\ConnectEvents.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\KObject.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\KThread.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\KValue.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\KvalueType.cs" />
+     <Compile Include="Assets\KU_NET\Net\Base\SocketAsyncEventArgsPool.cs" />
+     <Compile Include="Assets\KU_NET\Net\Configure\Config.cs" />
+     <Compile Include="Assets\KU_NET\Net\Core\AsynchronousClient.cs" />
+     <Compile Include="Assets\KU_NET\Net\Core\AsynchronousSocketListener.cs" />
+     <Compile Include="Assets\KU_NET\Net\Core\HttpClient.cs" />
+     <Compile Include="Assets\KU_NET\Net\Core\HttpUnit.cs" />
+     <Compile Include="Assets\KU_NET\Net\Core\KTcpClient.cs" />
+     <Compile Include="Assets\KU_NET\Net\Core\KTcpServer.cs" />
+     <Compile Include="Assets\KU_NET\Net\Manager\MessageManager.cs" />
+     <Compile Include="Assets\KU_NET\Net\Message\BaseMessage.cs" />
+     <Compile Include="Assets\KU_NET\Net\Message\IMessage.cs" />
+     <Compile Include="Assets\KU_NET\Net\Message\JsonMessage.cs" />
+     <Compile Include="Assets\KU_NET\Net\Message\KHeartBeatMessage.cs" />
+     <Compile Include="Assets\KU_NET\Net\Message\StructMessage.cs" />
+     <Compile Include="Assets\KU_NET\Net\Template\SingleTon.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\ByteBuffer.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\ErrorManager.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\InOutStream.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\About.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\DataReaderProvider.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\DataWriterProvider.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\EcmaScriptIdentifier.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\EcmaScriptWriter.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\IDataReader.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\IDataWriter.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\IJsonSerializable.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonDataReader.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonDataWriter.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonIgnoreAttribute.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonMemberAttribute.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonNameAttribute.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonOptInAttribute.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonReader.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonReaderSettings.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonSerializationException.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonSpecifiedPropertyAttribute.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonToken.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonWriter.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\JsonWriterSettings.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\Properties\AssemblyInfo.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\Properties\AssemblyVersion.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\TypeCoercionUtility.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\XmlDataReader.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\JsonFx.Json\XmlDataWriter.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\KTool.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\MonoDelegate.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\ParseUtils.cs" />
+     <Compile Include="Assets\KU_NET\Net\Tools\TaskManager.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Base\AbstractTrans.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Base\BaseView.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Base\Content.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Base\UIType.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Manager\UIManager.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Tools\StaticUtils.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Trans\AnimationTrans.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Trans\ClickTrans.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Trans\HideTrans.cs" />
+     <Compile Include="Assets\KU_NET\UIFramework\Trans\RegisterTrans.cs" />
+     <Compile Include="Assets\KU_NET\Utils\GlobalHelper.cs" />
+     <Compile Include="Assets\KU_NET\Utils\Iobject.cs" />
+     <Compile Include="Assets\KU_NET\Utils\SetPropertyAttribute.cs" />
+     <None Include="Assets\KU_NET\Net\Tools\JsonFx.Json\Readme.txt" />
+     <None Include="Assets\KU_NET\Net\Tools\JsonFx.Json\License.txt" />
+ <Reference Include="UnityEngine.UI">
+ <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
+ </Reference>
+ <Reference Include="LogMgr">
+ <HintPath>/Users/cjsjy123/Desktop/workspace/MM_HOTPAW/KFramework/KFrameWork/Assets/KU_NET/Net/Tools/LogMgr.dll</HintPath>
+ </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+	   Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  
+</Project>
