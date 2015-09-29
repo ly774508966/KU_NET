@@ -10,35 +10,6 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-public class TestJson
-{
-	
-	public string userToken;
-}
-
-public class TestJson2 :TestJson
-{
-	public string name ="cjsjy123";
-	public string password ="123123";
-}
-
-public class t2
-{
-	public void test1()
-	{
-		LogMgr.Log("test1");
-	}
-
-	public void test2()
-	{
-		LogMgr.Log("test2");
-	}
-
-	public void test3()
-	{
-		LogMgr.Log("test3");
-	}
-}
 
 
 
@@ -46,77 +17,20 @@ public class Manager : MonoBehaviour {
 	
 	KTcpClient client;
 	KTcpServer server ;
-	Thread th;
+	KThread th;
 
-
-
+	bool isDone =false;
+	float value =0;
+	HttpClient http;
+	
 	// Use this for initialization
 	void Start ()
 	{
 
 
-//		http= new HttpClient();
-//		http.BeginPost("http://192.168.1.5:7070/MonsterMaster/account/checkAccount.action",delegate(string obj)
-//		{
-//			LogMgr.Log("===1 result  = "+ obj);
-//		});
-//		http.AddField("params",ParseUtils.Json_Serialize(new TestJson2()));
-//
-//		http.StartConnect();
-//
-//		http.BeginPost("http://192.168.1.5:7070/MonsterMaster/account/checkAccount.action",delegate(string obj)
-//		               {
-//			LogMgr.Log("===2 result  = "+ obj);
-//		});
-//		http.AddField("params",ParseUtils.Json_Serialize(new TestJson2()));
-//		
-//		http.StartConnect();
-//
-//		http.BeginPost("http://192.168.1.5:7070/MonsterMaster/account/checkAccount.action",delegate(string obj)
-//		               {
-//			LogMgr.Log("===3 result  = "+ obj);
-//		});
-//		http.AddField("params",ParseUtils.Json_Serialize(new TestJson2()));
-//		
-//		http.StartConnect();
-//
-//		http.BeginPost("http://192.168.1.5:7070/MonsterMaster/account/checkAccount.action",delegate(string obj)
-//		               {
-//			LogMgr.Log("===4 result  = "+ obj);
-//		});
-//		http.AddField("params",ParseUtils.Json_Serialize(new TestJson2()));
-//		
-//		http.StartConnect();
-		//
-//		http.BeginPost("http://192.168.1.5:7070/MonsterMaster/account/checkAccount.action",delegate(string obj)
-//		               {
-//			LogMgr.Log("result  = "+ obj);
-//		});
-//		http.AddField("params",ParseUtils.Json_Serialize(new TestJson2()));
-//		
-//		http.StartConnect();
+		http= new HttpClient();
 
-
-//		var b = new ByteBuffer();
-//		b += new Byte[2]{1,2};
-//		b +=2;
-//		b +=5.2134f;
-//		b +=(short)7;
-//		b +=(double)9.872236;
-//		b += "cjsjy123";
-//
-//
-//		var v1 = (ushort) b;
-//		var v2 =(UInt32)b;
-//		var v3 = (float)b;
-//		var v4 = (short)b;
-//		var v5 =(double)b;
-//		var v6 = (string)b;
-
-
-
-
-		th = new Thread(testTh);th.Start();
+		th = KThread.StartTask(testTh);
 
 
 		client = new KTcpClient();
@@ -166,9 +80,7 @@ public class Manager : MonoBehaviour {
 	}
 
 
-	bool isDone =false;
-	float value =0;
-	HttpClient http;
+
 	void OnGUI()
 	{
 		GUILayout.Label("process = "+ value.ToString(),GUILayout.Width(200));
@@ -228,36 +140,10 @@ public class Manager : MonoBehaviour {
 			client.Close();
 		}
 
-
-//		server.Close();
-//		client.CloseConnect();
+		if(http != null)
+		{
+			http.Close();
+		}
 	}
-
-
-
-//	public  IEnumerator listenRec(KTcpServer server)
-//	{
-//
-//		LogMgr.Log("listenRec   ");
-//		server._socket.Get().BeginAccept(new AsyncCallback(KTcpServer.AcceptCallback),server._socket);
-//		yield return new WaitForSeconds(3f);
-//
-//	}
-//
-//	IEnumerator ThreadSend()
-//	{
-//		while(Application.isPlaying)
-//		{
-//
-//			LogMgr.Log("start send");
-//			KTcpClient.Send(client._socket,"Clienttest !SSSS ");
-//			yield return new WaitForSeconds(8f);
-//			KTcpServer.Send(server._socket,"Server !!!! gggggg");
-//			yield return new WaitForSeconds(3f);
-//		}
-//
-//		yield return null;
-//	}
-	
 
 }
