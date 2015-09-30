@@ -61,8 +61,7 @@ public class Manager : MonoBehaviour {
 		client.Send(message);//7
 		client.Send(message);//8
 		client.Send(message);//9
-		
-		
+
 		
 	}
 	

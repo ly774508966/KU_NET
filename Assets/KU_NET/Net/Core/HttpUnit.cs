@@ -395,7 +395,7 @@ namespace Kubility
 				
 				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 				Stream stream = response.GetResponseStream();
-				long totalSize = response.ContentLength;
+				long totalSize = response.ContentLength + file.field2;
 
 				//如果返回的response头中Content-Range值为空，说明服务器不支持Range属性，不支持断点续传,返回的是所有数据
 				if (response.Headers["Content-Range"] == null)
@@ -409,7 +409,7 @@ namespace Kubility
 				{
 					if(file.field0 != null && file.field2 >0)
 					{
-						file.field0.Seek(file.field2,SeekOrigin.Begin);
+						file.field0.Seek(0,SeekOrigin.End);
 					}
 
 
@@ -422,6 +422,7 @@ namespace Kubility
 							byte[] bys = new byte[file.field4];
 							int readLen = bs.Read(bys,0,bys.Length);
 							int maxLen =readLen;
+							int total =readLen;
 							while (readLen  >0)
 							{
 //								DownLoadEv.WaitOne();
@@ -443,10 +444,12 @@ namespace Kubility
 								}
 
 								readLen =bs.Read(bys,0,bys.Length);
+
+								total+= readLen;
 								maxLen = Math.Max(readLen,maxLen);
 							}
 
-
+							LogMgr.LogError("total ="+total);
 							file.field3 = 1;
 
 						}
