@@ -53,7 +53,7 @@ public class AsynchronousSocketListener
 	}
 	public static void AcceptCallback(IAsyncResult ar)
 	{
-		LogMgr.Log("Server AcceptCallback ");
+//		LogMgr.Log("Server AcceptCallback ");
 		// Signal the main thread to continue.     
 		allDone.Set();
 		// Get the socket that handles the client request.     
@@ -76,7 +76,7 @@ public class AsynchronousSocketListener
 		// Read data from the client socket.     
 		int bytesRead = handler.EndReceive(ar);
 
-		LogMgr.Log("Server ReadCallback  bytesRead ="+ bytesRead);
+//		LogMgr.Log("Server ReadCallback  bytesRead ="+ bytesRead);
 		if (bytesRead > 0)
 		{
 			// There might be more data, so store the data received so far.     
@@ -128,7 +128,7 @@ public class AsynchronousSocketListener
 			Socket handler = (Socket)ar.AsyncState;
 			// Complete sending the data to the remote device.     
 			int bytesSent = handler.EndSend(ar);
-			LogMgr.Log("Server Send "+ bytesSent + "bytes to client");
+//			LogMgr.Log("Server Send "+ bytesSent + "bytes to client");
 
 //			handler.Shutdown(SocketShutdown.Both);
 //			handler.Close();

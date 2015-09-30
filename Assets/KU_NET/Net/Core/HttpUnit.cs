@@ -403,7 +403,7 @@ namespace Kubility
 					Interlocked.Exchange(ref file.field2,0);
 					
 				}
-				LogMgr.Log("Content-Range = + " +response.Headers["Content-Range"] );
+//				LogMgr.Log("Content-Range = + " +response.Headers["Content-Range"] );
 
 				while(  file.field3 == 0)
 				{
@@ -448,7 +448,6 @@ namespace Kubility
 
 
 							file.field3 = 1;
-							LogMgr.Log("maxReadLen  ="+ maxLen);
 
 						}
 						catch(Exception ex)
@@ -569,7 +568,9 @@ namespace Kubility
 
 		public void Close()
 		{
-			m_thread.CloseAll();
+
+			KThread.CloseAll();
+
 			foreach(var sub in requestList)
 			{
 			  var subf =	(ClsTuple< FileStream,string, long,byte,int,object>)sub.field2;

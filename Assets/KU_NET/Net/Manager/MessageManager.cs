@@ -275,7 +275,7 @@ namespace Kubility
 					int leftLen = tuple.field0.buffer.DataCount;
 					UInt32 blen = tuple.field0.bodyLen;
 
-					LogMgr.LogError("  ----274  leftlen   = "+leftLen+"  blen ="+ blen );
+//					LogMgr.LogError("  ----274  leftlen   = "+leftLen+"  blen ="+ blen );
 					if(leftLen >= blen)
 					{
 						BaseMessage message= null;
@@ -298,7 +298,7 @@ namespace Kubility
 							LogMgr.LogError("Read Flag is 0 cant create");
 						}
 						
-						LogMgr.Log("--301   dataLen  = "+tuple.field0.buffer.DataCount );
+//						LogMgr.Log("--301   dataLen  = "+tuple.field0.buffer.DataCount );
 						var pdata = tuple.field0.buffer.ConverToBytes();
 						DealWithMessage(message);
 						m_SendBufferList.RemoveFirst();

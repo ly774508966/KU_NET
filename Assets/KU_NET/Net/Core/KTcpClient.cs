@@ -154,7 +154,7 @@ namespace Kubility
 //			if(!Application.isPlaying)
 //				return;
 
-			LogMgr.Log("complate ");
+//			LogMgr.Log("complate ");
 			_socket.SetStateFree();
 			if(ev == null)
 			{
@@ -166,15 +166,11 @@ namespace Kubility
 				ev.AcceptSocket = null;
 			}
 
-			LogMgr.LogError("SocketAsyncOperation  ="+ ev.LastOperation  +"  obj = "+ obj  +"ev.UserToken  =" + ev.UserToken);
-
-
-
 			if(ev.LastOperation == SocketAsyncOperation.Connect)
 			{
 				if(m_SendThread == null)
 				{
-					LogMgr.Log("m_SendThread start");
+
 					m_SendThread = new Thread(ThreadSendMessage);
 					m_SendThread.Start();
 
@@ -183,7 +179,7 @@ namespace Kubility
 				if(m_ReceiveThread  == null)
 				{
 
-					LogMgr.Log("m_ReceiveThread start");
+
 					m_ReceiveThread = new Thread(ThreadReceiveMessage);
 					m_ReceiveThread.Start();
 				}

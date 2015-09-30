@@ -13,7 +13,7 @@ public class N3View : MonoDelegateView
 	
 	public void ButtonClick()
 	{
-		LogMgr.Log("N3");
+
 		ContentManager.mIns.Pop();
 	}
 

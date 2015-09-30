@@ -132,8 +132,8 @@ public class Manager : MonoBehaviour {
 		AsynchronousSocketListener.allDone.Set();
 
 		AsynchronousSocketListener.stop = true;
-		if(th != null)
-			th.Abort();
+//		if(th != null)
+//			th.Abort();
 		if(client != null)
 		{
 			client.quit = true;

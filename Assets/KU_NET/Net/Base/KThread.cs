@@ -180,6 +180,7 @@ namespace Kubility
 		{
 			if(m_thread != null )
 			{
+				ForceSuspend();
 				m_thread.Abort();
 				OnDestroy();
 			}
@@ -202,7 +203,7 @@ namespace Kubility
 			}
 		}
 		
-		public void CloseAll()
+		public static void CloseAll()
 		{
 			KThreadPool.mIns.Close();
 		}
@@ -230,14 +231,15 @@ namespace Kubility
 			public void StopAll(bool force =true)
 			{
 				_stop= true;
-				for(int i = WorkQueue.Count -1; i >=0; ++i)
+				List<KThread>.Enumerator enumerator = WorkQueue.GetEnumerator();
+				while(enumerator.MoveNext())
 				{
-					var sub = WorkQueue[i];
+					KThread sub =(KThread) enumerator.Current;
 					sub.Abort();
 					if(force)
 						this.WaitQueue.Add(sub);
 				}
-				
+
 				WorkQueue.Clear();
 				
 			}

@@ -118,7 +118,7 @@ namespace Kubility
 					//may some bug
 					while(cmdList.Count >0)
 					{
-						LogMgr.LogError("PoolThread  -1");
+//						LogMgr.LogError("PoolThread  -1");
 						PoolCMD cmd = cmdList.First.Value;
 
 						float DelayTime = cmd.delayTime;

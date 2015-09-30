@@ -76,7 +76,7 @@ namespace Kubility
 					ret = m_socket.SendPacketsAsync(args);
 					m_state =  SocketArgsStats.SEND;
 
-					LogMgr.LogError("SendPacketsAsync  ret "+ ret);
+//					LogMgr.LogError("SendPacketsAsync  ret "+ ret);
 					if(!ret)
 					{
 						m_state = SocketArgsStats.FREE;
@@ -143,7 +143,7 @@ namespace Kubility
 
 					ret = m_socket.SendAsync(args);
 					m_state = SocketArgsStats.SEND;
-					LogMgr.LogError("SendAsync   =   "+ret);
+//					LogMgr.LogError("SendAsync   =   "+ret);
 					if(!ret)
 					{
 						m_state = SocketArgsStats.FREE;
@@ -270,7 +270,7 @@ namespace Kubility
 
 					ret = m_socket.ReceiveAsync(args);
 					m_state = SocketArgsStats.RECEIVE;
-					LogMgr.LogError("ReceiveAsync = "+ret);
+//					LogMgr.LogError("ReceiveAsync = "+ret);
 					if(!ret)
 					{
 						m_state = SocketArgsStats.FREE;
@@ -357,7 +357,7 @@ namespace Kubility
 
 		public void Reconnect()
 		{
-			LogMgr.LogError("Reconnect");
+
 			try
 			{
 				if(m_socket != null && m_IP != null)

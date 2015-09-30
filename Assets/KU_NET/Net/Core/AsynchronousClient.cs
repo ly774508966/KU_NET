@@ -111,7 +111,7 @@ public class AsynchronousClient
 				
 				state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
-				LogMgr.Log("ReceiveCallback  info ="+Encoding.ASCII.GetString(state.buffer, 0, bytesRead) );
+//				LogMgr.Log("ReceiveCallback  info ="+Encoding.ASCII.GetString(state.buffer, 0, bytesRead) );
 				// Get the rest of the data.     
 				client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
 			}
@@ -146,7 +146,7 @@ public class AsynchronousClient
 			Socket client = (Socket)ar.AsyncState;
 			// Complete sending the data to the remote device.     
 			int bytesSent = client.EndSend(ar);
-			LogMgr.Log("Client SendCallback  Size ="+bytesSent );
+//			LogMgr.Log("Client SendCallback  Size ="+bytesSent );
 			// Signal that all bytes have been sent.     
 			sendDone.Set();
 		}
