@@ -20,7 +20,7 @@ http.BeginDownLoadFileFlushToFile("http://118.192.69.207:8083/monster.apk",Appli
 			});
 			
 http.StartConnect();
-
+```
 ##HTTP 请求(post/get):
 ###unAuto start
 
@@ -33,6 +33,7 @@ http.BeginPost("http://xxx",
 			});
 http.AddField("---","---");		
 http.StartConnect();
+```
 
 ###Auto Start
 
@@ -45,6 +46,7 @@ http.BeginGet("http://xxx",
 				isDone = arg3;
 				LogMgr.Log("Onprocess " +"  float  ="+ arg2.ToString()  +" isDone "+ arg3.ToString());
 			},true);
+```
 
 ##KThread
 kthread 内部维护了一个simple thread pool。
@@ -57,6 +59,7 @@ void testTh()
 
 AsynchronousSocketListener.StartListening();
 }
+```
 
 ## buffer(auto serialize & deserialize)
 
@@ -73,6 +76,7 @@ int intvalue =(int)buffer;
 float floatvalue =(float)buffer;
 string str =(string)buffer;
 short shortvalue =(short)buffer;
+```
 
 ByteBuffer 目前不自动支持bool，因为buffer在序列化和反序列化struct的时候，内部的bool自动转为4byte,但是普通的bool，则为1byte，所以期望用户自己处理
 
@@ -102,6 +106,7 @@ public void ButtonClick (GameObject gobh, BaseEventData data)
 	ContentManager.mIns.Push (MainViewType.U2View);
 
 }
+```
 
 简单叙述一下，content 是作为中间数据类与contentmanger进行交互，负责view切换和状态维护，每个BaseView都是一个生命对象，通过base自动维护其生命周期，主要负责ui界面，效果方面，MonoDelegateView下可以执行逻辑，让view去播放动作
 ，同时可以通过 AutoAlignWithRectTrans&& autopos可以进行自动简易布局。^ ^
