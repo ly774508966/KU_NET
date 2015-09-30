@@ -11,11 +11,10 @@ this is based on UNITY 5.2.1
 
 ```csharp
 HttpClient http= new HttpClient()
-http.BeginDownLoadFileFlushToFile("http://118.192.69.207:8083/monster.apk",Application.persistentDataPath+"/mons.apk",
+http.BeginDownLoadFileFlushToFile("http://xxxxx/xxxx.apk",Application.persistentDataPath+"/xxx.apk",
 			 delegate(string arg1, float arg2, bool arg3)
 			 {
-				value = arg2;
-				isDone = arg3;
+
 				LogMgr.Log("Onprocess " +"  float  ="+ arg2.ToString()  +" isDone "+ arg3.ToString());
 			});
 			
@@ -80,9 +79,10 @@ short shortvalue =(short)buffer;
 
 ByteBuffer 目前不自动支持bool，因为buffer在序列化和反序列化struct的时候，内部的bool自动转为4byte,但是普通的bool，则为1byte，所以期望用户自己处理
 
-## struct  && json 
+## socket
+内部封装了一个AsyncSocket, 维护一套Async接口，
 
-可以使用 StructMessage  和jsonmessage
+传输数据可以使用 StructMessage  和jsonmessage
 struct 可自己维护序列化，反序列化，json可以通过内置jsonfx进行。
 
 
@@ -115,6 +115,10 @@ public void ButtonClick (GameObject gobh, BaseEventData data)
 
 ^^暂时想起来的就这些了
 
+##others
+
+http，保留有协程和异步的实现，socket基本都是走的异步，而unity去异步并不友好，所以部分回调处理，需要归置到同步接口中，这里提供了一个简单的方式去解决这个问题，可看HttpClient.
+
 ## License
 ```csharp
 The MIT License (MIT)
@@ -138,6 +142,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
+```
 
 
