@@ -8,7 +8,8 @@ this is based on UNITY 5.2.1
 ##
 
 ##HTTP 下载(支持断点续传):
-‘’‘csharp
+
+```csharp
 HttpClient http= new HttpClient()
 http.BeginDownLoadFileFlushToFile("http://118.192.69.207:8083/monster.apk",Application.persistentDataPath+"/mons.apk",
 			 delegate(string arg1, float arg2, bool arg3)
@@ -22,7 +23,8 @@ http.StartConnect();
 
 ##HTTP 请求(post/get):
 ###unAuto start
-‘’‘csharp
+
+```csharp
 HttpClient http= new HttpClient()
 http.BeginPost("http://xxx",
 			 delegate(string arg1)
@@ -33,7 +35,8 @@ http.AddField("---","---");
 http.StartConnect();
 
 ###Auto Start
-‘’‘csharp
+
+```csharp
 HttpClient http= new HttpClient()
 http.BeginGet("http://xxx",
 			 delegate(string arg1, float arg2, bool arg3)
@@ -45,8 +48,9 @@ http.BeginGet("http://xxx",
 
 ##KThread
 kthread 内部维护了一个simple thread pool。
-‘’‘csharp
- KThread.StartTask(testTh);
+
+```csharp
+KThread.StartTask(testTh);
 
 void testTh()
 {
@@ -56,7 +60,7 @@ AsynchronousSocketListener.StartListening();
 
 ## buffer(auto serialize & deserialize)
 
-'''csharp
+```csharp
 var buffer = new ByteBuffer();
 //序列化
 buffer += 3;
@@ -80,24 +84,24 @@ struct 可自己维护序列化，反序列化，json可以通过内置jsonfx进
 
 ## UI
 based on MonoDelegateView ,BaseView
-'''csharp
-	protected override void Awake ()
-	{
-		base.Awake ();
-		Vector3 pos = m_view.pos;
-		BaseView.Create<UGUIView> (this, new HideTrans (gameObject));
-		m_view.pos = pos; 
-		button.GetListener ().onPointerClick = ButtonClick;
+```csharp
+protected override void Awake ()
+{
+	base.Awake ();
+	Vector3 pos = m_view.pos;
+	BaseView.Create<UGUIView> (this, new HideTrans (gameObject));
+	m_view.pos = pos; 
+	button.GetListener ().onPointerClick = ButtonClick;
 
 
-	}
+}
 
-	public void ButtonClick (GameObject gobh, BaseEventData data)
-	{
+public void ButtonClick (GameObject gobh, BaseEventData data)
+{
 
-		ContentManager.mIns.Push (MainViewType.U2View);
+	ContentManager.mIns.Push (MainViewType.U2View);
 
-	}
+}
 
 简单叙述一下，content 是作为中间数据类与contentmanger进行交互，负责view切换和状态维护，每个BaseView都是一个生命对象，通过base自动维护其生命周期，主要负责ui界面，效果方面，MonoDelegateView下可以执行逻辑，让view去播放动作
 ，同时可以通过 AutoAlignWithRectTrans&& autopos可以进行自动简易布局。^ ^
@@ -107,7 +111,7 @@ based on MonoDelegateView ,BaseView
 ^^暂时想起来的就这些了
 
 ## License
-
+```csharp
 The MIT License (MIT)
 
 Copyright (c) 2015 cjsjy123
