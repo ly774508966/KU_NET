@@ -27,6 +27,18 @@ public class Manager : MonoBehaviour {
 	void Start ()
 	{
 
+		var buffer = new ByteBuffer();
+
+		buffer += 3;
+		buffer += 4f;
+		buffer +="test";
+		buffer +=(short)7;
+
+
+		int intvalue =(int)buffer;
+		float floatvalue =(float)buffer;
+		string str =(string)buffer;
+		short shortvalue =(short)buffer;
 
 		http= new HttpClient();
 
