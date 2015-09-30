@@ -95,22 +95,31 @@ namespace Kubility
 		
 		void ThreadEvents()
 		{
-			OnEnter();
-			while(!kill)
+
+			try
 			{
-				restEv.WaitOne();
-				if(VoidEv != null)
+				OnEnter();
+				while(!kill)
 				{
-					VoidEv();
+					restEv.WaitOne();
+					if(VoidEv != null)
+					{
+						VoidEv();
+					}
+					
+					if(SEv  != null)
+					{
+						SEv(this);
+					}
 				}
 				
-				if(SEv  != null)
-				{
-					SEv(this);
-				}
+				OnDestroy();
 			}
-			
-			OnDestroy();
+			catch(Exception ex)
+			{
+				LogMgr.LogError("ex  = "+ ex.ToString());
+			}
+
 			
 		}
 		
