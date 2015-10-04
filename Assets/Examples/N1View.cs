@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Kubility;
+using UnityEngine.UI;
 
 public class N1View : MonoDelegateView
 {
-
 
 	protected override void Awake ()
 	{
