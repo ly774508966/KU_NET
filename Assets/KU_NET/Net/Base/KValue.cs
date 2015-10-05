@@ -71,6 +71,7 @@ namespace Kubility
 
 				public void Dispose()
 				{
+						LogMgr.LogError("disss");
 						free (field0);
 						free (field1);
 						GC.SuppressFinalize(this);

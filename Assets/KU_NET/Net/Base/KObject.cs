@@ -4,18 +4,33 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Kubility
 {
 		public class KObject
 		{
-
+				
+				static int count;
+				//				static List<object> list = new List<object> ();
+				
 				protected bool _isRunning;
 
 				public bool isRunning {
 						get {
 								return _isRunning;
 						}
+				}
+
+				public KObject ()
+				{
+						count++;
+//						list.Add (this);
+				}
+
+				public static void Dump ()
+				{
+						LogMgr.LogError ("Object count left =" + count);
 				}
 
 				protected virtual void OnCreate ()
@@ -47,6 +62,9 @@ namespace Kubility
 						#if SHOW_LOG
 						LogMgr.Log (this.ToString () + " OnDestroy");
 						#endif
+
+						count--;
+//						list.Remove (this);
 				}
 
 				protected virtual void OnEnter ()

@@ -1,4 +1,4 @@
-﻿//#define IN_UNITY
+﻿//#define USE_COR
 
 using UnityEngine;
 using System;
@@ -7,9 +7,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 
-#if IN_UNITY
-
-
+#if USE_COR
 #else
 using System.Net;
 using System.Threading;
@@ -20,703 +18,579 @@ namespace Kubility
 {
 
 
-	public class HttpUnit :ConnectEvents
-	{
-
-		enum HttpType
+		public class HttpUnit :ConnectEvents
 		{
-			FREE,
-			POST,
-			GET,
-			DOWNLOADFILE,
-		}
 
-		Stack<ClsTuple< string,HttpType,object> > requestList;
+				enum HttpType
+				{
+						FREE,
+						POST,
+						GET,
+						DOWNLOADFILE,
+				}
 
-		KThread m_thread;
+				Stack<ClsTuple< string,HttpType,object> > requestList;
 
-		ClsTuple<string,HttpType,object> m_curRequest;
+				KThread m_thread;
 
-#if IN_UNITY
-		Task m_task;
-		WWWForm m_form;
-		Stream m_stream;
-		public readonly bool Unity =true;
+				ClsTuple<string,HttpType,object> m_curRequest;
+
+				#if USE_COR
+				Task m_task;
+				WWWForm m_form;
+				Stream m_stream;
+				public readonly bool Unity = true;
+
 
 #else
+				
+				public  readonly  bool Unity = false;
 
-		public readonly bool Unity =false;
+				ClsTuple< string,int,object> file;
 
-				ClsTuple< FileStream,string, long,byte,int,object> file ;
+				StringBuilder m_requestSR;
+				/// <summary>
+				/// fieldNums   timeout
+				/// </summary>
+				MiniTuple<short,int> m_varUtils;
 
-		StringBuilder m_requestSR ;
-		/// <summary>
-		/// fieldNums   timeout
-		/// </summary>
-				ClsTuple<short,int> m_varUtils ;
+				#endif
 
+				#region interface
+
+				VoidDelegate _ConnectCloseEvent = null;
+				VoidDelegate _ConnectFailedEvent = null;
+				VoidDelegate _TimeOutEvent = null;
+				VoidDelegate _OthersErrorEvent = null;
+				Action<string> _SuccessEvent = null;
+		
+				Action<byte[],float,bool> _onProcess;
+
+				public VoidDelegate m_ConnectCloseEvent {
+						get {
+								return _ConnectCloseEvent;
+						}
+				}
+
+				public VoidDelegate m_ConnectFailedEvent {
+						get {
+								return _ConnectFailedEvent;
+						}
+				}
+
+				public VoidDelegate m_TimeOutEvent {
+						get {
+								return _TimeOutEvent;
+						}
+				}
+
+				public VoidDelegate m_OthersErrorEvent {
+						get {
+								return _OthersErrorEvent;
+						}
+				}
+
+				public Action<string> m_SuccessEvent {
+						get {
+								return _SuccessEvent;
+						}
+						set {
+								_SuccessEvent = value;
+						}
+				}
+
+				public Action<byte[],float,bool> onProcess {
+						get {
+								return _onProcess;
+						}
+						set {
+								_onProcess = value;
+						}
+				}
+
+				public void UnRegisterAll ()
+				{
+						_ConnectCloseEvent = null;
+						_ConnectFailedEvent = null;
+						_TimeOutEvent = null;
+						_SuccessEvent = null;
+						_onProcess = null;
+						_OthersErrorEvent = null;
+
+				}
+
+				#endregion
+
+				public HttpUnit ()
+				{
+
+						requestList = new Stack<ClsTuple<string, HttpType, object>> ();
+						this.m_curRequest = new ClsTuple<string,HttpType,object> ();
+#if USE_COR
+#else
+
+						this.file = new ClsTuple< string,int,object> ();
+
+						this.file.field1 = Config.mIns.HttpSpeedLimit;
+
+						this.m_requestSR = new StringBuilder (1024);
+
+						this.m_varUtils = new MiniTuple<short, int> ();
+						this.m_varUtils.field0 = 0;
+						this.m_varUtils.field1 = Config.mIns.HttpSpeedLimit;
 #endif
+				}
 
-		#region interface
-		VoidDelegate _ConnectCloseEvent =null ;
-		VoidDelegate _ConnectFailedEvent =null;
-		VoidDelegate _TimeOutEvent =null;
-		VoidDelegate _OthersErrorEvent =null;
-		Action<string> _SuccessEvent =null;
-		
-		Action<string,float,bool> _onProcess ;
-		
-		public VoidDelegate m_ConnectCloseEvent 
-		{
-			get
-			{
-				return _ConnectCloseEvent;
-			}
-		}
-		public VoidDelegate m_ConnectFailedEvent
-		{
-			get
-			{
-				return _ConnectFailedEvent;
-			}
-		}
-		public VoidDelegate m_TimeOutEvent
-		{
-			get
-			{
-				return _TimeOutEvent;
-			}
-		}
-		public VoidDelegate m_OthersErrorEvent
-		{
-			get
-			{
-				return _OthersErrorEvent;
-			}
-		}
-		public Action<string> m_SuccessEvent
-		{
-			get
-			{
-				return _SuccessEvent;
-			}
-			set
-			{
-				_SuccessEvent = value;
-			}
-		}
-		
-		public Action<string,float,bool> onProcess 
-		{
-			get
-			{
-				return _onProcess;
-			}
-			set
-			{
-				_onProcess = value;
-			}
-		}
-		
-		public void UnRegisterAll()
-		{
-			_ConnectCloseEvent = null;
-			_ConnectFailedEvent = null;
-			_TimeOutEvent = null;
-			_SuccessEvent = null;
-			_onProcess = null;
-			_OthersErrorEvent = null;
 
-		}
+				public void BeginPost (string URL, Action<string> callback, bool AutoStart = false)
+				{
 
-		#endregion
+						m_curRequest.field0 = URL;
+						m_curRequest.field1 = HttpType.POST;
+						m_SuccessEvent = callback;
+#if USE_COR
 
-		public HttpUnit()
-		{
-
-			requestList = new Stack<ClsTuple<string, HttpType, object>> ();
-#if IN_UNITY
+						m_task = new Task (UnityConnect (callback), AutoStart);
 #else
-			this.m_curRequest = new ClsTuple<string,HttpType,object>();
-			this.file = new ClsTuple< FileStream,string, long,byte,int,object>();
-
-			this.file.field2 = 0;
-			this.file.field3 = 0;
-			this.file.field4 =Config.mIns.HttpSpeedLimit;
-
-			this.m_requestSR = new StringBuilder(1024);
-
-			this.m_varUtils = new ClsTuple<short, int>(0,0);
-			this.m_varUtils.field0 = 0;
-			this.m_varUtils.field1 = 20000;
-#endif
-		}
-
-
-		public void BeginPost(string URL,Action<string> callback, bool AutoStart =false)
-		{
-
-			m_curRequest.field0 = URL;
-			m_curRequest.field1 = HttpType.POST;
-			m_SuccessEvent = callback;
-#if IN_UNITY
-
-			m_task = new Task(UnityConnect(callback),AutoStart);
-#else
-			m_varUtils.field0 =0;
-			m_thread = KThread.StartTask(HttpThread,false);
+						m_varUtils.field0 = 0;
+						m_thread = KThread.StartTask (HttpThread, false);
 #endif
 
 
-		}
-		
-		public void BeginGet(string URL,Action<string> callback, bool AutoStart =true)
-		{
+				}
 
-			m_curRequest.field0 = URL;
-			m_curRequest.field1 = HttpType.GET;
-			this.m_SuccessEvent = callback;
-#if IN_UNITY
+				public void BeginGet (string URL, Action<string> callback, bool AutoStart = true)
+				{
 
-			m_task = new Task(UnityConnect(callback),AutoStart);
+						m_curRequest.field0 = URL;
+						m_curRequest.field1 = HttpType.GET;
+						this.m_SuccessEvent = callback;
+#if USE_COR
+
+						m_task = new Task (UnityConnect (callback), AutoStart);
 #else
-			m_varUtils.field0 = 0;
-			m_thread = KThread.StartTask(HttpThread,false);
+						m_varUtils.field0 = 0;
+						m_thread = KThread.StartTask (HttpThread, false);
 				
 #endif
 
-		}
+				}
 
 
-		public void BeginDownLoadFileFlushToFile(string URL, string Filepath,Action<string,float,bool> callback,bool AutoStart=false)
-		{
-			m_curRequest.field0 = URL;
-			m_curRequest.field1 = HttpType.DOWNLOADFILE;
-#if IN_UNITY
+				public void BeginDownLoadFileFlushToFile (string URL, string Filepath, Action<byte[],float,bool> callback, bool AutoStart = false)
+				{
+						m_curRequest.field0 = URL;
+						m_curRequest.field1 = HttpType.DOWNLOADFILE;
+#if USE_COR
 
-			m_task = new Task(UnityConnect(callback),AutoStart);
+						m_task = new Task (UnityConnect (callback), AutoStart);
 #else
 
-			this.onProcess = callback;
+						this.onProcess = callback;
 
-			if(file.field3 ==1 )
-			{
-				file.field3 = 0;
-			}
-
-			try
-			{
-				file.field0 = new FileStream(Filepath,FileMode.OpenOrCreate);
-				file.field2 = file.field0.Length;//cur len
-				
-			}
-			catch(Exception ex)
-			{
-				LogMgr.LogError(ex);
-				if(m_OthersErrorEvent != null)
-				{
-					m_OthersErrorEvent();
-				}
-			}
-
-
-			m_curRequest.field2 = file;
+						file.field0 = Filepath;
+						m_curRequest.field2 = file;
 			
-			m_thread = KThread.StartTask(ThreadDownLoad,false);
+						m_thread = KThread.StartTask (ThreadDownLoad, false);
 
 #endif
 
-
-
-		}
+				}
 
 
 
 
-#if IN_UNITY
-		IEnumerator UnityConnect(object obj)
-		{
+				#if USE_COR
+				IEnumerator UnityConnect (object obj)
+				{
 
-			var m_state =m_curRequest.field1;
+						var m_state = m_curRequest.field1;
 
-			WWW www = GetForm(m_state == HttpType.POST);
-			yield return www;
+						WWW www = GetForm (m_state == HttpType.POST);
+						yield return www;
 			
-			if(www.error == null)
-			{
-				if(m_state == HttpType.GET || m_state == HttpType.POST)
-				{
+						if (www.error == null) {
+								if (m_state == HttpType.GET || m_state == HttpType.POST) {
 
-					Action<string> callback = (Action<string>)obj;
-					if(callback != null)
-						callback(www.text);
+										Action<string> callback = (Action<string>)obj;
+										if (callback != null)
+												callback (www.text);
+								} else if (m_state == HttpType.DOWNLOADFILE) {
+
+										m_stream = new MemoryStream (www.bytes);
+
+										MonoDelegate.mIns.Coroutine_Delay (30, delegate() {
+												m_stream.Close ();
+												m_stream = null;
+										});
+								}
+
+						} else {
+								LogMgr.LogError ("WWW : " + m_curRequest.field0 + "  error!  = " + www.error);
+						}
+						m_state = HttpType.FREE;
+						www.Dispose ();
 				}
-				else if( m_state == HttpType.DOWNLOADFILE )
-				{
-
-					m_stream = new MemoryStream(www.bytes);
-
-					MonoDelegate.mIns.Coroutine_Delay(30,delegate(){
-						m_stream.Close();
-						m_stream = null;
-					});
-				}
-
-			}
-			else
-			{
-				LogMgr.LogError("WWW : "+m_curRequest.field0 +"  error!  = "+www.error);
-			}
-			m_state = HttpType.FREE;
-			www.Dispose();
-		}
 		
-#endif
+				#endif
 			
-		public void StartConnect()
-		{
-#if IN_UNITY
+				public void StartConnect ()
+				{
+#if USE_COR
 
-			if(!m_task.Running)
-			{
-				m_task.Start();
-			}
-			else
-			{
-				LogMgr.Log("Http Coroutine is Runing");
-			}
+						if (!m_task.Running) {
+								m_task.Start ();
+						} else {
+								LogMgr.Log ("Http Coroutine is Runing");
+						}
 #else
-			try
-			{
+						try {
 
 
-				var m_state = m_curRequest.field1;
-				if(m_state == HttpType.GET || m_state == HttpType.POST )
-				{
+								var m_state = m_curRequest.field1;
+								if (m_state == HttpType.GET || m_state == HttpType.POST) {
 
-					var value = new ClsTuple<string,System.Action<string>>();
-					value.field0 =m_requestSR.ToString();
-					value.field1 = m_SuccessEvent;
-					m_curRequest.field2 = value;
+										var value = new ClsTuple<string,System.Action<string>> ();
+										value.field0 = m_requestSR.ToString ();
+										value.field1 = m_SuccessEvent;
+										m_curRequest.field2 = value;
 
-					m_requestSR.Length =0;
-					requestList.Push(m_curRequest);
+										m_requestSR.Length = 0;
+										requestList.Push (m_curRequest);
 
-					m_thread.Start();
-				}
-				else if(m_state == HttpType.DOWNLOADFILE)
-				{
-					file.field5 = onProcess;
-					m_curRequest.field2 = file;
-					requestList.Push(m_curRequest);
-					m_thread.Start();
-				}
+										m_thread.Start ();
+								} else if (m_state == HttpType.DOWNLOADFILE) {
+										file.field2 = onProcess;
+										m_curRequest.field2 = file;
+										requestList.Push (m_curRequest);
+										m_thread.Start ();
+								}
 
-			}
-			catch(Exception ex)
-			{
-				LogMgr.LogError(ex);
-			}
+						} catch (Exception ex) {
+								LogMgr.LogError (ex);
+						}
 
 #endif
-		}
+				}
 
-#if IN_UNITY
+				#if USE_COR
+				
+
+
+
+
+
 #else
-		void HttpThread()
-		{
-			ClsTuple<string,HttpType,object> curRequest = requestList.Pop();
-			ClsTuple<string,System.Action<string>> temp = (ClsTuple<string,System.Action<string>>) curRequest.field2;
-			string strRequest =temp.field0;
-			try
-			{
-				HttpWebRequest req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
-				if(curRequest.field1 == HttpType.POST)
+				void HttpThread ()
 				{
+						ClsTuple<string,HttpType,object> curRequest = requestList.Pop ();
+						ClsTuple<string,System.Action<string>> temp = (ClsTuple<string,System.Action<string>>)curRequest.field2;
+						string strRequest = temp.field0;
+						try {
+								HttpWebRequest req = (HttpWebRequest)WebRequest.Create (curRequest.field0);
+								if (curRequest.field1 == HttpType.POST) {
 
-					req.Timeout = 20000;
+										req.Timeout = 20000;
 								
-					req.Method = "POST";
-				}
-				else if(curRequest.field1 == HttpType.GET)
-				{
+										req.Method = "POST";
+								} else if (curRequest.field1 == HttpType.GET) {
 
-					req.Timeout = 20000;
-					req.ContentType ="application/x-www-form-urlencoded";
-					req.Method = "GET";
-				}
+										req.Timeout = 20000;
+										req.ContentType = "application/x-www-form-urlencoded";
+										req.Method = "GET";
+								}
 
 
-				byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
-				req.ContentLength = btBodys.Length;
-				req.GetRequestStream().Write(btBodys,0, btBodys.Length);
-				LogMgr.Log("resquest  = "+strRequest);
+								byte[] btBodys = System.Text.Encoding.UTF8.GetBytes (strRequest);
+								req.ContentLength = btBodys.Length;
+								req.GetRequestStream ().Write (btBodys, 0, btBodys.Length);
+								LogMgr.Log ("resquest  = " + strRequest);
 
-				var Response = (HttpWebResponse)req.GetResponse();
-				var sr = new StreamReader(Response.GetResponseStream());
+								var Response = (HttpWebResponse)req.GetResponse ();
+								var sr = new StreamReader (Response.GetResponseStream ());
 				
-				string responseContent = sr.ReadToEnd();
+								string responseContent = sr.ReadToEnd ();
 				
-				if(temp.field1 != null)
-				{
-					temp.field1(responseContent);
-				}
+								if (temp.field1 != null) {
+										temp.field1 (responseContent);
+								}
 				
-				req.Abort();
-				Response.Close();
-				sr.Close();
+								req.Abort ();
+								Response.Close ();
+								sr.Close ();
 
-			}
-			catch (WebException  webEx)
-			{
-				DealWithEx(webEx);
+						} catch (WebException  webEx) {
+								DealWithEx (webEx);
 
-			}
+						}
 			
 
-		}
-#endif
+				}
+				#endif
 
-#if IN_UNITY
+				#if USE_COR
+				
+
+
 #else
-
+				
 
 		
-		void ThreadDownLoad()
-		{
-			var curRequest = requestList.Pop();
-
-			var file =(ClsTuple< FileStream,string, long,byte,int,object>)curRequest.field2;
-			Action<string,float,bool> callback = (Action<string,float,bool>)file.field5;
-			try
-			{
-				HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(curRequest.field0);
-				request.AddRange((int)file.field2);
-				
-				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-				Stream stream = response.GetResponseStream();
-				long totalSize = response.ContentLength + file.field2;
-
-				//如果返回的response头中Content-Range值为空，说明服务器不支持Range属性，不支持断点续传,返回的是所有数据
-				if (response.Headers["Content-Range"] == null)
+				void ThreadDownLoad ()
 				{
-					Interlocked.Exchange(ref file.field2,0);
-					
-				}
-//				LogMgr.Log("Content-Range = + " +response.Headers["Content-Range"] );
+						var curRequest = requestList.Pop ();
+						//path,flag,limitspeed,ACTION
+						using (var req = (ClsTuple< string,int,object>)curRequest.field2) {
+								try {
+										var fsstream = new FileStream (req.field0, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+										long oldSize = fsstream.Length;
+										Action<byte[],float,bool> callback = (Action<byte[],float,bool>)req.field2;
+										HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create (curRequest.field0);
+										request.AddRange ((int)oldSize);
 
-				while(  file.field3 == 0)
+										HttpWebResponse response = (HttpWebResponse)request.GetResponse ();
+										Stream stream = response.GetResponseStream ();
+
+
+										//如果返回的response头中Content-Range值为空，说明服务器不支持Range属性，不支持断点续传,返回的是所有数据
+										if (response.Headers ["Content-Range"] == null) {
+												oldSize = 0;
+
+										}
+										long totalSize = response.ContentLength + oldSize;
+										bool bvalue = false;
+
+										while (!bvalue) {
+												if (fsstream != null && oldSize > 0) {
+														fsstream.Seek (0, SeekOrigin.End);
+												}
+
+
+												if (response != null) {
+
+														try {
+																BufferedStream bs = new BufferedStream (stream);
+																byte[] bys = new byte[req.field1 ];
+																int readLen = bs.Read (bys, 0, bys.Length);
+																int maxLen = readLen;
+																int total = readLen;
+																while (readLen > 0) {
+
+																		if (fsstream != null) {
+																				fsstream.Write (bys, 0, readLen);
+																		}
+																		bvalue = total == response.ContentLength;
+
+																		if (callback != null) {
+																				
+																				float value = (float)(oldSize + total) / (float)totalSize;
+																				callback (bys, value, bvalue);
+																		}
+
+																		readLen = bs.Read (bys, 0, bys.Length);
+
+																		total += readLen;
+																		maxLen = Math.Max (readLen, maxLen);
+																}
+
+																LogMgr.LogError ("total =" + total.ToString () + " maxSpeed =" + maxLen.ToString ());
+
+
+														} catch (Exception ex) {
+																LogMgr.Log ("Exception  = " + ex);
+
+														}
+												} else {
+														if (m_OthersErrorEvent != null) {
+																m_OthersErrorEvent ();
+														}
+														break;
+												}
+										}
+
+										response.Close ();
+										request.Abort ();
+										response.Close ();
+										stream.Close ();
+										fsstream.Close ();
+
+						
+								} catch (WebException ex) {
+										DealWithEx (ex);
+
+
+
+								}
+						}
+
+						LogMgr.Log ("DOWNLOADFILE ISDONE");
+
+				}
+
+				#endif
+				public void AddField (string field, string content)
 				{
-					if(file.field0 != null && file.field2 >0)
-					{
-						file.field0.Seek(0,SeekOrigin.End);
-					}
-
-
-					if (response != null)
-					{
-
-						try
-						{
-							BufferedStream bs = new BufferedStream(stream);
-							byte[] bys = new byte[file.field4];
-							int readLen = bs.Read(bys,0,bys.Length);
-							int maxLen =readLen;
-							int total =readLen;
-							while (readLen  >0)
-							{
-//								DownLoadEv.WaitOne();
-								if(file.field0 != null)
-								{
-									file.field0.Write(bys,0,readLen);
-								}
-
-								string newstr = file.field1 +Encoding.UTF8.GetString(bys);
-								Interlocked.Exchange(ref file.field1 ,newstr);
-
-								Interlocked.Add(ref file.field2,readLen);
-
-								if(callback != null)
-								{
-									bool bvalue  = file.field3 == 1;
-									float value =(float)file.field2/(float)totalSize;
-									callback(file.field1,value,bvalue);
-								}
-
-								readLen =bs.Read(bys,0,bys.Length);
-
-								total+= readLen;
-								maxLen = Math.Max(readLen,maxLen);
-							}
-
-							LogMgr.LogError("total ="+total);
-							file.field3 = 1;
-
+#if USE_COR
+						if (m_form == null) {
+								m_form = new WWWForm ();
 						}
-						catch(Exception ex)
-						{
-							LogMgr.Log("Exception  = "+ ex);
-							file.field3 = 1;
-						}
-					}
-					else
-					{
-						if(m_OthersErrorEvent != null)
-						{
-							m_OthersErrorEvent();
-						}
-						break;
-					}
-				}
-
-				response.Close();
-				request.Abort();
-				response.Close();
-				stream.Close();
-				DownloadAbort();
-	
-			}
-			catch(WebException ex)
-			{
-				DealWithEx(ex);
-				DownloadAbort();
-
-			}
-			LogMgr.Log("DOWNLOADFILE ISDONE");
-
-		}
-
-#endif
-		public void AddField(string field,string content)
-		{
-#if IN_UNITY
-			if(m_form  == null)
-			{
-				m_form = new WWWForm();
-			}
-			m_form.AddField(field,content);
+						m_form.AddField (field, content);
 #else 
-			if(m_varUtils.field0 == 0)
-			{
-				m_requestSR.AppendFormat("{0}={1}",field,content);
-				m_varUtils.field0++;
+						if (m_varUtils.field0 == 0) {
+								m_requestSR.AppendFormat ("{0}={1}", field, content);
+								m_varUtils.field0++;
 
-			}
-			else if(m_varUtils.field0 >0)
-			{
+						} else if (m_varUtils.field0 > 0) {
 
-				m_requestSR.AppendFormat("&{0}={1}",field,content);
+								m_requestSR.AppendFormat ("&{0}={1}", field, content);
 
-				m_varUtils.field0++;
-			}
+								m_varUtils.field0++;
+						}
 
 #endif
-		}
-		
-		public void AddField(string field,int content)
-		{
-#if IN_UNITY
-			if(m_form  == null)
-			{
-				m_form = new WWWForm();
-			}
-			m_form.AddField(field,content);
+				}
+
+				public void AddField (string field, int content)
+				{
+#if USE_COR
+						if (m_form == null) {
+								m_form = new WWWForm ();
+						}
+						m_form.AddField (field, content);
 #else
-			if(m_varUtils.field0 == 0)
-			{
-				m_requestSR.AppendFormat("{0}={1}",field,content.ToString());
-				m_varUtils.field0++;
+						if (m_varUtils.field0 == 0) {
+								m_requestSR.AppendFormat ("{0}={1}", field, content.ToString ());
+								m_varUtils.field0++;
 				
-			}
-			else if(m_varUtils.field0 >0)
-			{
+						} else if (m_varUtils.field0 > 0) {
 				
-				m_requestSR.AppendFormat("&{0}={1}",field,content.ToString());
+								m_requestSR.AppendFormat ("&{0}={1}", field, content.ToString ());
 				
-				m_varUtils.field0++;
-			}
+								m_varUtils.field0++;
+						}
 #endif
-		}
+				}
 
-#if IN_UNITY		
-		public void AddBinaryData(string field,byte[] content)
-		{
+				#if USE_COR
+				public void AddBinaryData (string field, byte[] content)
+				{
 
-			if(m_form  == null)
-			{
-				m_form = new WWWForm();
-			}
-			m_form.AddBinaryData(field,content);
+						if (m_form == null) {
+								m_form = new WWWForm ();
+						}
+						m_form.AddBinaryData (field, content);
 
-		}
+				}
 
 
-#endif		
+				#endif
 		
 			
-#region helper
-		public KThread getThread()
-		{
-			return this.m_thread;
-		}
+				#region helper
 
-		public void PopRequest()
-		{
-			if(this.requestList.Count >0)
-			{
-				this.requestList.Pop();
-			}
-		}
-
-
-		public void Close()
-		{
-
-			KThread.CloseAll();
-
-			foreach(var sub in requestList)
-			{
-			  var subf =	(ClsTuple< FileStream,string, long,byte,int,object>)sub.field2;
-				if(subf.field0 != null)
+				public KThread getThread ()
 				{
-					subf.field0.Close();
+						return this.m_thread;
 				}
-			}
-		}
+
+				public void PopRequest ()
+				{
+						if (this.requestList.Count > 0) {
+								this.requestList.Pop ();
+						}
+				}
 
 
-#if IN_UNITY
-		public Stream GetStream()
-		{
-			return m_stream;
-		}
-
-		WWW GetForm(bool isPost)
-		{
-			WWW  www;
-			if(isPost)
-			{
-				if(m_form == null)
+				public void Close ()
 				{
 
-					LogMgr.LogError("Form is Null May Cause Erros while Use Http Post!");
+						KThread.CloseAll ();
+						requestList.Clear ();
+
 				}
-				www = new WWW(m_curRequest.field0,m_form);
-			}
-			else
-			{
-				www = new WWW(m_curRequest.field0);
-			}
+
+
+				#if USE_COR
+				public Stream GetStream ()
+				{
+						return m_stream;
+				}
+
+				WWW GetForm (bool isPost)
+				{
+						WWW www;
+						if (isPost) {
+								if (m_form == null) {
+
+										LogMgr.LogError ("Form is Null May Cause Erros while Use Http Post!");
+								}
+								www = new WWW (m_curRequest.field0, m_form);
+						} else {
+								www = new WWW (m_curRequest.field0);
+						}
 			
 			
-			return www;
-		}
+						return www;
+				}
+
+
+
 
 #else
-
-		void DownloadAbort()
-		{
-			if(onProcess != null)
-			{
-				bool bvalue  = file.field3 == 1;
-				onProcess(file.field1,1,bvalue);
-			}
-			
-			if(file.field0 != null)
-			{
-				file.field0.Flush();
-				file.field0.Close();
-				file.field0 = null;
-			}
-			file.field0 = null;
-			file.field1="";
-			file.field2=0;
-
-		}
-
-
-		void DealWithEx(WebException webEx)
-		{
-			LogMgr.Log("WebException  = "+ webEx);
-			if (webEx.Status == WebExceptionStatus.Timeout)
-			{
-				if(m_TimeOutEvent != null)
+				
+				void DealWithEx (Exception Ex)
 				{
-					m_TimeOutEvent();
+						WebException webEx = Ex as WebException;
+						if (webEx != null) {
+								
+								if (webEx.Status == WebExceptionStatus.Timeout) {
+										if (m_TimeOutEvent != null) {
+												m_TimeOutEvent ();
+										}
+								} else if (webEx.Status == WebExceptionStatus.ConnectionClosed) {
+										if (m_ConnectCloseEvent != null) {
+												m_ConnectCloseEvent ();
+										}
+								} else if (webEx.Status == WebExceptionStatus.ConnectFailure) {
+										if (m_ConnectFailedEvent != null) {
+												m_ConnectFailedEvent ();
+										}
+								} else if (webEx.Status != WebExceptionStatus.Success) {
+										if (m_OthersErrorEvent != null) {
+												m_OthersErrorEvent ();
+										}
+								}
+						}
+						LogMgr.Log ("Exception  = " + webEx);
+
 				}
-			}
-			else if(webEx.Status == WebExceptionStatus.ConnectionClosed)
-			{
-				if(m_ConnectCloseEvent != null)
+
+
+				public void SetDownLoadSpeed (int speed)
 				{
-					m_ConnectCloseEvent();
+						file.field1 = speed;
 				}
-			}
-			else if(webEx.Status == WebExceptionStatus.ConnectFailure)
-			{
-				if(m_ConnectFailedEvent != null)
+
+				public int GetDownloadSpeed ()
 				{
-					m_ConnectFailedEvent();
+						return file.field1;
 				}
-			}
-			else if(webEx.Status !=  WebExceptionStatus.Success)
-			{
-				if(m_OthersErrorEvent != null)
+
+				public void SetOutTime (int time)
 				{
-					m_OthersErrorEvent();
+						m_varUtils.field1 = time;
 				}
-			}
-		}
 
-		int GetFrom()
-		{
-			long value = file.field2 ;
-			if(value <0)
-			{
-				return 0;
-			}
-			else
-			{
-				return (int)value;
-			}
-		}
+				public int GetOutTime ()
+				{
+						return m_varUtils.field1;
+				}
 
-		int GetEnd(long totalSize)
-		{
-			long value = file.field2 + file.field4 -1;
-			if(value >= totalSize)
-			{
-				return (int)(totalSize-1);
-			}
-			else
-				return (int)value;
+				#endif
+				#endregion
+		
+		
+		
 		}
-
-		public void SetDownLoadSpeed(int speed)
-		{
-			file.field4 =speed;
-		}
-		
-		public int GetDownloadSpeed()
-		{
-			return file.field4;
-		}
-		
-		public void SetOutTime(int time)
-		{
-			m_varUtils.field1 = time;
-		}
-		
-		public int GetOutTime()
-		{
-			return m_varUtils.field1;
-		}
-
-#endif
-#endregion
-		
-		
-		
-	}
 
 }

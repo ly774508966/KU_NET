@@ -1,4 +1,4 @@
-﻿Shader "Kubility/PsLV_shader" {
+Shader "Kubility/PsLV_shader" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -40,6 +40,7 @@ SubShader {
 			pixelResult = saturate(pow(pixelResult / (_inWhite - _inBlack), _inGamma));
 			pixelResult = (pixelResult * (_outWhite - _outBlack) + _outBlack)/255.0;	
 			return pixelResult;
+			
 		}
 		
 		void surf (Input IN, inout SurfaceOutput o) {

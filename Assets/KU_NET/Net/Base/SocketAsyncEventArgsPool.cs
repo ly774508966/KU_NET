@@ -70,12 +70,16 @@ namespace Kubility
 		{
 			byte quit = 0;
 			ManualResetEvent m_lock = new ManualResetEvent(false);
-			LinkedList<PoolCMD> cmdList = new LinkedList<PoolCMD>();
+			Stack<PoolCMD> cmdList = new Stack<PoolCMD>();
 			
 			public SocketAsyncEventArgsPoolTools(SocketAsyncEventArgsPool pool)
 			{
 				m_lock.Reset();
-				new Thread(new ParameterizedThreadStart(PoolThread)).Start(pool);
+				KThread.StartTask(delegate()
+				{
+					PoolThread(pool);
+				});
+				//new Thread(new ParameterizedThreadStart(PoolThread)).Start(pool);
 			}
 			/// <summary>
 			/// dont want to call thread.abort
@@ -102,7 +106,7 @@ namespace Kubility
 				{
 					lock(cmdList)
 					{
-						cmdList.AddLast(cmd);
+						cmdList.Push(cmd);
 						Resume();
 					}
 				}
@@ -119,7 +123,7 @@ namespace Kubility
 					while(cmdList.Count >0)
 					{
 //						LogMgr.LogError("PoolThread  -1");
-						PoolCMD cmd = cmdList.First.Value;
+						PoolCMD cmd = cmdList.Pop();
 
 						float DelayTime = cmd.delayTime;
 						bool found =false;
@@ -165,7 +169,6 @@ namespace Kubility
 
 							if(!found)
 							{
-								LogMgr.LogError("All Busy");
 								SocketAsyncEventArgs newargs = new SocketAsyncEventArgs();
 								if(cmd.flag == 1)//send
 								{
@@ -179,8 +182,7 @@ namespace Kubility
 
 								cmdEv(newargs,found);
 							}
-							
-							cmdList.RemoveFirst();
+
 						}
 						else
 						{
@@ -193,7 +195,7 @@ namespace Kubility
 					Pause();
 				}
 				
-				LogMgr.Log("PoolThread is Done");
+				LogMgr.Log("PoolThread is Done  = "+ quit.ToString());
 			}
 		}
 		/// <summary>

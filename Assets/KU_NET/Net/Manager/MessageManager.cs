@@ -325,8 +325,6 @@ namespace Kubility
 		{
 			if(message != null)
 			{
-//				KTool.Dump(message.DataHead);
-				LogMgr.LogError("DealWithMessage----");
 				KTool.Dump(((StructMessage)message).StructData);
 			}
 		}
