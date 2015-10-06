@@ -236,7 +236,6 @@ namespace Kubility
 
 		public void PushToReceiveBuffer(byte[] data)
 		{
-			LogMgr.LogError("PushToReceiveBuffer  ");
 			lock(m_SendBufferList)
 			{
 				CheckNewData(data);
@@ -316,7 +315,7 @@ namespace Kubility
 			}
 			catch(Exception ex)
 			{
-				LogMgr.LogError("NEW DATA  "+ex);
+				LogMgr.LogError("EX = "+ex.ToString());
 			}
 
 		}

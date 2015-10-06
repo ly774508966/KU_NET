@@ -1,5 +1,5 @@
 ﻿#if UNITY_EDITOR
-#define SHOW_LOG
+//#define SHOW_LOG
 #endif
 using UnityEngine;
 using System;
@@ -12,7 +12,6 @@ namespace Kubility
 		{
 				
 				static int count;
-				//				static List<object> list = new List<object> ();
 				
 				protected bool _isRunning;
 
@@ -25,12 +24,12 @@ namespace Kubility
 				public KObject ()
 				{
 						count++;
-//						list.Add (this);
+
 				}
 
 				public static void Dump ()
 				{
-						LogMgr.LogError ("Object count left =" + count);
+						LogMgr.Log ("Object count left =" + count.ToString());
 				}
 
 				protected virtual void OnCreate ()
@@ -64,7 +63,7 @@ namespace Kubility
 						#endif
 
 						count--;
-//						list.Remove (this);
+
 				}
 
 				protected virtual void OnEnter ()

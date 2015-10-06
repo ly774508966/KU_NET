@@ -18,8 +18,8 @@ namespace Kubility
 		public bool quit =false;
 
 		AsyncSocket _socket;
-		Thread m_SendThread;
-		Thread m_ReceiveThread;
+		KThread m_SendThread;
+		KThread m_ReceiveThread;
 
 		ManualResetEvent mlock = new ManualResetEvent(false);
 
@@ -68,14 +68,15 @@ namespace Kubility
 		public void Close()
 		{
 			quit= true;
-			m_SendThread.Abort();
-			m_ReceiveThread.Abort();
+			mlock.Set();
 			m_pool.Close();
 		}
 
 		void ConnectCallback(SocketAsyncEventArgs args)
 		{
-
+			LogMgr.Log("ConnectCallback");
+			KThread.StartTask(ThreadSendMessage);
+			KThread.StartTask(ThreadReceiveMessage);
 		}
 		
 		void ThreadSendMessage()
@@ -151,10 +152,6 @@ namespace Kubility
 
 		void AcceptEventArg_OnConnectCompleted(object obj,SocketAsyncEventArgs ev)
 		{
-//			if(!Application.isPlaying)
-//				return;
-
-//			LogMgr.Log("complate ");
 			_socket.SetStateFree();
 			if(ev == null)
 			{
@@ -165,24 +162,11 @@ namespace Kubility
 			{
 				ev.AcceptSocket = null;
 			}
-
+			LogMgr.Log("LastOperation = "+ ev.LastOperation.ToString());
 			if(ev.LastOperation == SocketAsyncOperation.Connect)
 			{
-				if(m_SendThread == null)
-				{
-
-					m_SendThread = new Thread(ThreadSendMessage);
-					m_SendThread.Start();
-
-				}
-
-				if(m_ReceiveThread  == null)
-				{
-
-
-					m_ReceiveThread = new Thread(ThreadReceiveMessage);
-					m_ReceiveThread.Start();
-				}
+				KThread.StartTask(ThreadSendMessage);
+				KThread.StartTask(ThreadReceiveMessage);
 
 			}
 			else if(ev.LastOperation == SocketAsyncOperation.Receive)
@@ -231,9 +215,6 @@ namespace Kubility
 
 		void ProcessReceive(byte[] Bytes,int rlen)
 		{
-//			if(!Application.isPlaying)
-//				return;
-
 			byte[] readData = new byte[rlen];
 			System.Array.Copy(Bytes,0,readData,0,rlen);
 

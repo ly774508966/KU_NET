@@ -66,7 +66,16 @@ namespace Kubility
 						#if SHOW_LOG
 						LogMgr.Log ("Thread OnStart");
 						#endif
-						restEv.Set ();
+
+				}
+
+				protected override void OnExit ()
+				{
+						base.OnExit ();
+						#if SHOW_LOG
+						LogMgr.Log ("Thread OnExit");
+						#endif
+
 				}
 
 				static int counter = 0;
@@ -97,10 +106,11 @@ namespace Kubility
 				{
 
 						try {
-								OnEnter ();
+								restEv.Set();
 								while (!kill) {
 										restEv.WaitOne ();
 
+										OnEnter ();
 										if (VoidEv != null) {
 												VoidEv ();
 										}
@@ -108,6 +118,8 @@ namespace Kubility
 										if (SEv != null) {
 												SEv (this);
 										}
+
+										OnExit ();
 								}
 				
 								OnDestroy ();
@@ -163,7 +175,7 @@ namespace Kubility
 				/// </summary>
 				public void WillKill ()
 				{
-						LogMgr.LogError ("enter");
+
 						if (m_thread != null && m_thread.ThreadState != ThreadState.Unstarted) {
 								this.kill = true;
 								this.restEv.Set ();
@@ -212,9 +224,9 @@ namespace Kubility
 				private class KThreadPool:SingleTon<KThreadPool>
 				{
 
-						List<KThread> WorkQueue = new List<KThread> ();
+						LinkedList<KThread> WorkQueue = new LinkedList<KThread> ();
 						LinkedList<VoidDelegate> TaskQueue = new LinkedList<VoidDelegate> ();
-						List<KThread> WaitQueue = new List<KThread> ();
+						LinkedList<KThread> WaitQueue = new LinkedList<KThread> ();
 						bool _stop = false;
 
 						public KThreadPool ()
@@ -228,7 +240,7 @@ namespace Kubility
 						public void ResumeAll ()
 						{
 								_stop = false;
-								List<KThread>.Enumerator enumerator = WorkQueue.GetEnumerator ();
+								var enumerator = WorkQueue.GetEnumerator ();
 								while (enumerator.MoveNext ()) {
 										KThread sub = (KThread)enumerator.Current;
 										sub.ForceResume ();
@@ -238,7 +250,7 @@ namespace Kubility
 						public void StopAll ()
 						{
 								_stop = true;
-								List<KThread>.Enumerator enumerator = WorkQueue.GetEnumerator ();
+								var enumerator = WorkQueue.GetEnumerator ();
 								while (enumerator.MoveNext ()) {
 										KThread sub = (KThread)enumerator.Current;
 										sub.ForceSuspend ();
@@ -250,19 +262,20 @@ namespace Kubility
 
 						public void Close ()
 						{
+
 								_stop = true;
 								TaskQueue.Clear ();
-								LogMgr.LogError ("total work = " + (WorkQueue.Count) + "  wait =" + WaitQueue.Count);
-								List<KThread>.Enumerator enumerator = WorkQueue.GetEnumerator ();
+
+								var enumerator = WorkQueue.GetEnumerator ();
 								while (enumerator.MoveNext ()) {
 										KThread sub = (KThread)enumerator.Current;
 										sub.WillKill ();
 
 								}
-								LogMgr.LogError ("wait");
+
 
 								WorkQueue.Clear ();
-								List<KThread>.Enumerator wenumerator = WaitQueue.GetEnumerator ();
+								var wenumerator = WaitQueue.GetEnumerator ();
 								while (wenumerator.MoveNext ()) {
 										KThread sub = (KThread)wenumerator.Current;
 										sub.WillKill ();
@@ -277,7 +290,7 @@ namespace Kubility
 						{
 								if (th != null) {
 										lock (m_lock) {
-												WaitQueue.Add (th);
+												WaitQueue.AddLast (th);
 										}
 
 					
@@ -288,7 +301,7 @@ namespace Kubility
 						{
 								if (th != null) {
 										lock (m_lock) {
-												WorkQueue.Add (th);
+												WorkQueue.AddLast (th);
 										}
 					
 								}
@@ -300,7 +313,7 @@ namespace Kubility
 				
 								if (callback != null) {
 										if (WaitQueue.Count > 0)
-												callback (WaitQueue [WaitQueue.Count - 1]);
+												callback (WaitQueue.First.Value);
 										else
 												callback (null);
 								}
@@ -325,17 +338,22 @@ namespace Kubility
 								TaskQueue.RemoveFirst ();
 				
 								if (WaitQueue.Count > 0) {
-										KThread th;
+										KThread th = null;
 										lock (m_lock) {
-												th = WaitQueue [WaitQueue.Count - 1];
-												while (th.m_thread.ThreadState == ThreadState.Aborted && WaitQueue.Count > 0) {
-														WaitQueue.Remove (th);
-														th = WaitQueue [WaitQueue.Count - 1];
+												var en = WaitQueue.GetEnumerator ();
+												while (en.MoveNext ()) {
+														th = en.Current as KThread;
+														if (th.m_thread.ThreadState == ThreadState.Aborted)
+																WaitQueue.Remove (th);
+														else if (!th.isRunning)
+																break;
 												}
-												if (WaitQueue.Count == 0)
+
+												if (th == null)
 														return;
 
-												WorkQueue.Add (th);
+
+												WorkQueue.AddLast (th);
 												WaitQueue.Remove (th);
 										}
 					
@@ -375,7 +393,7 @@ namespace Kubility
 				
 								lock (m_lock) {
 										th = (KThread)obj;
-										WaitQueue.Add (th);
+										WaitQueue.AddLast (th);
 										WorkQueue.Remove (th);
 								}
 				
