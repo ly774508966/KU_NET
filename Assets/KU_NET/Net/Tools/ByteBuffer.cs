@@ -6,6 +6,80 @@ using System.IO;
 
 namespace Kubility
 {
+	public struct Bool8
+	{
+		byte value;
+
+		public static Bool8 ToBool8(byte[] bys)
+		{
+			Bool8 kvalue;
+			kvalue.value = bys [0];
+			return kvalue;
+		}
+
+		public byte[] GetBytes()
+		{
+			return BitConverter.GetBytes (value);
+		}
+
+		public static implicit  operator bool (Bool8 bvalue)
+		{
+			return bvalue.value == 0 ? false : true;
+		}
+
+		public static implicit  operator Bool8 (bool bvalue)
+		{
+			Bool8 newvalue;
+			newvalue.value = bvalue ? (byte)1 :(byte) 0;
+			return newvalue;
+		}
+
+		public static explicit  operator Bool8 (Bool32 bvalue)
+		{
+			Bool8 newvalue;
+			newvalue.value = bvalue ? (byte)1 :(byte) 0;
+			return newvalue;
+		}
+
+
+	}
+
+	public struct Bool32
+	{
+		int value;
+
+		public static Bool32 ToBool32(byte[] bys)
+		{
+
+			Bool32 kvalue;
+			kvalue.value = BitConverter.ToInt32 (bys,0);
+			return kvalue;
+		}
+		public byte[] GetBytes()
+		{
+			return BitConverter.GetBytes (value);
+		}
+
+		public static implicit  operator bool (Bool32 bvalue)
+		{
+			return bvalue.value == 0 ? false : true;
+		}
+
+		public static implicit  operator Bool32 (bool bvalue)
+		{
+			Bool32 newvalue;
+			newvalue.value = bvalue ? 1 : 0;
+			return newvalue;
+		}
+
+		public static explicit  operator Bool32 (Bool8 bvalue)
+		{
+			Bool32 newvalue;
+			newvalue.value = bvalue ? 1 : 0;
+			return newvalue;
+		}
+	}
+
 	/// <summary>
 	/// 本地数据缓冲类(as ADT)
 	/// </summary>
@@ -151,6 +225,18 @@ namespace Kubility
 //			return left;
 //		}
 
+		public static ByteBuffer operator +(ByteBuffer left,Bool8 right)
+		{
+			left += right.GetBytes ();
+			return left;
+		}
+
+		public static ByteBuffer operator +(ByteBuffer left,Bool32 right)
+		{
+			left += right.GetBytes ();
+			return left;
+		}
+
 		public static ByteBuffer operator  +(ByteBuffer left,float right)
 		{
 			left += BitConverter.GetBytes(right);	
@@ -178,6 +264,33 @@ namespace Kubility
 
 
 		#region Read
+		public static explicit  operator Bool8 (ByteBuffer left)
+		{
+			if(left != null && left.DataCount >= ByteStream.BYTE_LEN)
+			{
+				byte[] tempBys = new byte[ByteStream.BYTE_LEN];
+				Array.Copy(left.buffer,0,tempBys,0,ByteStream.BYTE_LEN);
+				left.Clear(ByteStream.BYTE_LEN);
+				return Bool8.ToBool8(tempBys);
+			}
+			LogMgr.LogError("Read from ByteBuffer Error");
+			return default(Bool8);
+		}
+
+		public static explicit  operator Bool32 (ByteBuffer left)
+		{
+			if(left != null && left.DataCount >= ByteStream.INT32_LEN)
+			{
+				byte[] tempBys = new byte[ByteStream.INT32_LEN];
+				Array.Copy(left.buffer,0,tempBys,0,ByteStream.INT32_LEN);
+				left.Clear(ByteStream.INT32_LEN);
+				return Bool32.ToBool32(tempBys);
+			}
+			LogMgr.LogError("Read from ByteBuffer Error");
+			return false;
+		}
+
+
 		public static explicit  operator int (ByteBuffer left)
 		{
 			if(left != null && left.DataCount >= ByteStream.INT32_LEN)

@@ -13,31 +13,21 @@ namespace Kubility
 			this.Flag = 1;
 		}
 
-//		public override byte[] Serialize ()
-//		{
-//			return base.Serialize ();
-//		}
 
-//		public override void Initialize ()
-//		{
-//			base.Initialize ();
-//		}
 	}
 
 
 	public class AbstractJsonData
 	{
-		public int msgid;
+		
+
 
 	}
+
 
 	public class JsonMessage :BaseMessage 
 	{
 
-//		public JsonMessage()
-//		{
-//			this.head.WriteFlag(1);
-//		}
 
 		AbstractJsonData _jsonData;
 
@@ -79,25 +69,20 @@ namespace Kubility
 
 		void Serialize_Data()
 		{
-			this.body.m_FirstValue =ParseUtils.Json_Serialize(jsonData);
+
+			if(jsonData != null)
+				this.body.m_FirstValue +=ParseUtils.Json_Serialize(jsonData);
 		}
 
 		public override byte[] Serialize ()
 		{
-			byte[] bys = new byte[head.bodyLen + 14];
+			ByteBuffer buffer = new ByteBuffer ();
+			if(head != null)
+				buffer += head.Serialize ();
 
-//			int rlen = head.stream.Read(bys,0,14);
-//			if(rlen != 14)
-//			{
-//				while(rlen >0)
-//				{
-//					rlen = head.stream.Read(bys,0,rlen);
-//				}
-//			}
-
-			byte[] bs = System.Text.Encoding.UTF8.GetBytes(this.body.m_FirstValue);
-			System.Array.Copy(bs,0,bys,14,bs.Length);
-			return bys;
+			buffer += System.Text.Encoding.UTF8.GetBytes(this.body.m_FirstValue);
+	
+			return buffer.ConverToBytes();
 
 		}
 
