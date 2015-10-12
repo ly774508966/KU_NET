@@ -7,11 +7,11 @@ namespace Kubility
 {
 	public class MessageManager :SingleTon<MessageManager> 
 	{
-
+		
 		public class QuequeTuple
 		{
 			MiniTuple<int,LinkedList<BaseMessage>> queue;
-
+			
 			public int Size
 			{
 				get
@@ -19,19 +19,19 @@ namespace Kubility
 					return queue.field1.Count;
 				}
 			}
-
+			
 			internal QuequeTuple()
 			{
 				Queue_Init(out queue);
 			}
-
+			
 			void Queue_Init(out MiniTuple<int,LinkedList<BaseMessage>> queue)
 			{
 				queue = new MiniTuple<int, LinkedList<BaseMessage>>();
 				queue.field0 =0;
 				queue.field1 = new LinkedList<BaseMessage>();
 			}
-
+			
 			bool ComparePriority(MiniTuple<int,LinkedList<BaseMessage>> queue,int value)
 			{
 				if(queue.field0 < value)
@@ -42,7 +42,7 @@ namespace Kubility
 				}
 				return false;
 			}
-
+			
 			public void Push_Back(BaseMessage t)
 			{
 				if(t == null)
@@ -65,10 +65,10 @@ namespace Kubility
 						queue.field1.AddLast(t);
 					}
 				}
-					
+				
 				
 			}
-
+			
 			public bool Pop_First(out BaseMessage ev) 
 			{
 				
@@ -79,7 +79,7 @@ namespace Kubility
 					{
 						queue.field1.RemoveFirst();
 					}
-
+					
 					return true;
 				}
 				else
@@ -88,7 +88,7 @@ namespace Kubility
 					return false;
 				}
 			}
-
+			
 			public bool Pop_Back(out BaseMessage ev) 
 			{
 				
@@ -107,16 +107,16 @@ namespace Kubility
 					return false;
 				}
 			}
-
+			
 			public bool Remove(BaseMessage message)
 			{
 				lock(queue.field1)
 				{
 					return queue.field1.Remove(message);
 				}
-
+				
 			}
-
+			
 			public bool Remove(int index)
 			{
 				if(index > queue.field1.Count)
@@ -135,7 +135,7 @@ namespace Kubility
 							{
 								queue.field1.Remove(first);
 							}
-								
+							
 							return true;
 						}
 						
@@ -146,7 +146,7 @@ namespace Kubility
 				}
 			}
 			
-
+			
 			public BaseMessage Get_First()
 			{
 				if(queue.field1.Count == 0)
@@ -158,7 +158,7 @@ namespace Kubility
 					return queue.field1.First.Value;
 				}
 			}
-
+			
 			public BaseMessage Get_Last()
 			{
 				if(queue.field1.Count == 0)
@@ -170,7 +170,7 @@ namespace Kubility
 					return queue.field1.Last.Value;
 				}
 			}
-
+			
 			public BaseMessage Get(int index)
 			{
 				if(index > queue.field1.Count)
@@ -187,62 +187,87 @@ namespace Kubility
 						{
 							return first.Value;
 						}
-
+						
 						i++;
 						first = first.Next;
 					}
 					return null;
-
+					
 				}
 			}
-
+			
 			public void Clear()
 			{
 				this.queue.field1.Clear();
 			}
-
+			
 		}
-
+		
 		QuequeTuple SendQueue ;
 		QuequeTuple ReceiveQueue ;
 		QuequeTuple BufferQueue ;
-
+		
 		LinkedList<MiniTuple<MessageHead,ByteBuffer>> m_SendBufferList ;
+		
+		Dictionary<uint,Stack<object>> callbackDic ;
 
+		Action<BaseMessage> custom;
+
+		object mlock ;
+		
 		public MessageManager()
 		{
+			this.mlock = new object();
 			this.SendQueue = new QuequeTuple();
 			this.ReceiveQueue = new QuequeTuple();
 			this.BufferQueue = new QuequeTuple();
 			this.m_SendBufferList = new LinkedList<MiniTuple<MessageHead, ByteBuffer>>();
+			this.callbackDic = new Dictionary<uint, Stack<object>>();
 		}
-
-
+		
+		
 		public QuequeTuple GetSendQueue()
 		{
 			return SendQueue;
 		}
-
+		
 		public QuequeTuple GetReceiveQueue()
 		{
 			return ReceiveQueue;
 		}
-
-
+		
+		
 		public QuequeTuple GetBufferQueue()
 		{
 			return BufferQueue;
 		}
-
+		
 		public void PushToReceiveBuffer(byte[] data)
 		{
-			lock(m_SendBufferList)
+			
+			CheckNewData(data);
+			
+		}
+		
+		public void PushToWaitQueue<T>(BaseMessage message,Action<T> callback)
+		{
+			if(!callbackDic.ContainsKey(message.DataHead.CMD))
 			{
-				CheckNewData(data);
+				var stack = new Stack<object>();
+				stack.Push(callback);
+				callbackDic.Add(message.DataHead.CMD,stack);
 			}
-
+			else
+			{
+				callbackDic[message.DataHead.CMD].Push(callback);
+			}
 		}
 
+		public void RegiseterCustomDeal(Action<BaseMessage> ev)
+		{
+			custom = ev;
+		}
+		
 		MiniTuple<MessageHead,ByteBuffer> TryGetTuple()
 		{
 			if(m_SendBufferList.Count >0)
@@ -258,56 +283,69 @@ namespace Kubility
 			}
 		}
 
+
+		
 		void CheckNewData(byte[] data)
 		{
 			try
 			{
-				MiniTuple<MessageHead,ByteBuffer> tuple = TryGetTuple();
-				
+				MiniTuple<MessageHead,ByteBuffer> tuple;
+				lock(mlock)
+				{
+					tuple = TryGetTuple();
+				}
+
+				//LogMgr.LogError("new data = "+ data.Length +" now ="+ tuple.field1.DataCount);
 				tuple.field1 += data;
 				if(tuple.field1.DataCount >= MessageHead.HeadLen)
 				{
+					if(tuple.field0 ==null)
+						tuple.field0 = BaseMessage.ReadHead(tuple.field1.ConverToBytes());
+					else
+						tuple.field0.buffer += data;
 					
-					tuple.field0 = BaseMessage.ReadHead(tuple.field1.ConverToBytes());
-
 					//left data
 					int leftLen = tuple.field0.buffer.DataCount;
 					UInt32 blen = tuple.field0.bodyLen;
+//					LogMgr.LogError("left  Len = "+leftLen +"  blen ="+ blen +" tuple1 = "+ tuple.field1.DataCount);
 
-//					LogMgr.LogError("  ----274  leftlen   = "+leftLen+"  blen ="+ blen );
 					if(leftLen >= blen)
 					{
 						BaseMessage message= null;
 						if(tuple.field0.Flag ==1)//json
 						{
-							message = new JsonMessage();//
-							//						message.DataHead = tuple.field0;
-							
+							message = JsonMessage.Create(tuple.field0.buffer.Read(0,(int)blen),tuple.field0);
+
 						}
 						else if(tuple.field0.Flag ==2)
 						{
-							StructMessageData sdata;
-							sdata = (StructMessageData)StructMessage.BytesToStruct(tuple.field0.buffer.ConverToBytes(),typeof(StructMessageData));
-							tuple.field0.buffer.Clear(System.Runtime.InteropServices.Marshal.SizeOf(typeof(StructMessageData)));
-
-							message =StructMessage.Create(tuple.field0,sdata);;
+							message =StructDataFactory.Create(tuple.field0.buffer,tuple.field0);
 						}
 						else if(tuple.field0.Flag ==0)
 						{
 							LogMgr.LogError("Read Flag is 0 cant create");
 						}
-						
-//						LogMgr.Log("--301   dataLen  = "+tuple.field0.buffer.DataCount );
-						var pdata = tuple.field0.buffer.ConverToBytes();
-						DealWithMessage(message);
-						m_SendBufferList.RemoveFirst();
 
+						if(custom == null)
+							DealWithMessage(message);
+						else
+							custom(message);
+
+					
+						lock(mlock)
+						{
+							
+							m_SendBufferList.RemoveFirst();
+						}
+
+						//LogMgr.LogError("=====   left = "+ tuple.field0.buffer.DataCount );
+						
 						if(leftLen > blen)
 						{
-							CheckNewData(pdata);
+							CheckNewData(tuple.field0.buffer.ConverToBytes());
 						}
 						
-
+						
 						
 					}
 					
@@ -315,23 +353,55 @@ namespace Kubility
 			}
 			catch(Exception ex)
 			{
-				LogMgr.LogError("EX = "+ex.ToString());
+				LogMgr.LogError(ex);
 			}
-
+			
 		}
-
+		
 		void DealWithMessage(BaseMessage message)
 		{
-			if(message != null)
+
+			if(message != null && message.DataHead.Version == Config.mIns.Version)
 			{
-				KTool.Dump(((StructMessage)message).StructData);
+				Stack<object> stack;
+				bool ret =false;
+				lock(mlock)
+				{
+					ret = callbackDic.TryGetValue(message.DataHead.CMD,out stack);
+				}
+
+				if(	ret)
+				{
+					object ac = stack.Pop();
+					if(ac == null)
+					{
+						LogMgr.LogError("Receie data But Action is Null!");
+						return;
+					}
+
+					if(message.DataHead.Flag == 1)
+					{
+						JsonMessage json =(JsonMessage)message;
+						Action<string> rac = (Action<string>)ac;
+						rac(json.jsonData);
+					}
+					else if(message.DataHead.Flag == 2)
+					{
+						StructMessage data =(StructMessage)message;
+						Action<ValueType> rac = (Action<ValueType>)ac;
+						rac(data.StructData);
+					}
+
+					lock(mlock)
+					{
+						if(stack.Count ==0)
+							callbackDic.Remove(message.DataHead.CMD);
+					}
+
+				}
+				
 			}
 		}
-
-
-		
-		
-
 	}
 }
 

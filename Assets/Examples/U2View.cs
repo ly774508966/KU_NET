@@ -15,7 +15,7 @@ public class U2View : MonoDelegateView,IDragHandler
 	public void OnDrag (PointerEventData eventData)
 	{
 		Vector3 wpos;
-		Camera camera = UIManager.current.camera;
+
 		RectTransformUtility.ScreenPointToWorldPointInRectangle (UIManager.current.transform as RectTransform, eventData.position, null, out wpos);
 
 		gameObject.transform.position = wpos;

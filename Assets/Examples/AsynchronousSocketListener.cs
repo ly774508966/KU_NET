@@ -128,7 +128,7 @@ public class AsynchronousSocketListener
 			Socket handler = (Socket)ar.AsyncState;
 			// Complete sending the data to the remote device.     
 			int bytesSent = handler.EndSend(ar);
-//			LogMgr.Log("Server Send "+ bytesSent + "bytes to client");
+			LogMgr.Log("Server Send "+ bytesSent + "bytes to client");
 
 //			handler.Shutdown(SocketShutdown.Both);
 //			handler.Close();

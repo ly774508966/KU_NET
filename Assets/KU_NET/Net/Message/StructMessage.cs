@@ -15,40 +15,15 @@ namespace Kubility
 			this.Flag = 2;
 		}
 
-
 	}
+	
 
-	[Serializable]  
-	[StructLayout(LayoutKind.Sequential,Pack = 1)]//按1字节对齐  
-	public struct StructMessageData
+
+	public sealed class StructMessage :BaseMessage
 	{
-		public int msgID;
-		public bool boolValue;
-		public short charValue;
-		public float floatValue;
-		public double doubleValue;
-		[MarshalAsAttribute(UnmanagedType.ByValTStr,SizeConst=120)]  
-		public string info;
-
-		public static void Init(byte[] Bys,out StructMessageData data)
-		{
-			MemoryStream stream = new MemoryStream(Bys);
-			ByteStream.readInt32(stream,out data.msgID);
-			ByteStream.readBool(stream,4,out data.boolValue);
-			ByteStream.readShort16(stream,out data.charValue);
-			ByteStream.readfloat(stream,out data.floatValue);
-			ByteStream.readdouble(stream,out data.doubleValue);
-			ByteStream.readStringWithLength(stream,120,out data.info);
-			stream.Close();
-		}
-
-	}
-
-	public class StructMessage :BaseMessage
-	{
-		protected StructMessageData? _StructData;
-
-		public StructMessageData? StructData
+		private ValueType _StructData;
+		
+		public ValueType StructData
 		{
 			get
 			{
@@ -59,75 +34,40 @@ namespace Kubility
 				_StructData = value;
 			}
 		}
-
-		public static StructMessage Create(MessageHead head,StructMessageData data)
+		
+		public static StructMessage Create(MessageHead head,ValueType data)
 		{
 			StructMessage message = new StructMessage();
 			message.head = head;
-			message.StructData = data;
+			message._StructData = data;
 			return message;
 		}
-
-
-		public override byte[] Serialize ()
+		
+		public override void Wait_Deserialize<T> (Action<T> ev)  
 		{
 
-			if(head != null)
+			MessageManager.mIns.PushToWaitQueue(this,delegate(ValueType value)
 			{
-				ByteBuffer buffer = new ByteBuffer();
-
-				buffer += head.Serialize();
-				buffer += StructToBytes(StructData);
-
-				return buffer.ConverToBytes();
-			}
-			else
-			{
-				LogMgr.LogError(" Error  head is Null");
-			}
-
-
-			return null;
-		}
-
-
-		public static byte[] StructToBytes(object structObj)
-		{
-			if(structObj != null)
-			{
-				int size =  Marshal.SizeOf(structObj);
-				
-				IntPtr buffer = Marshal.AllocHGlobal(size);
-				try
-				{
-					Marshal.StructureToPtr(structObj, buffer, true);
-					byte[] bytes = new byte[size];
-					Marshal.Copy(buffer, bytes, 0, size);
-					return bytes;
-				}
-				finally
-				{
-					Marshal.FreeHGlobal(buffer);
-				}
-			}
-			else
-				return null;
-
+			 	T data =(T)Convert.ChangeType(value,typeof(T));
+				ev(data);
+			});
 		}
 		
-		public static object BytesToStruct(byte[] bytes, Type strcutType)
+		
+		public override byte[] Serialize (bool addHead =true)
 		{
-			int size =  Marshal.SizeOf(strcutType);
-			IntPtr buffer = Marshal.AllocHGlobal(size);
-			try
+			ByteBuffer buffer = new ByteBuffer();
+			if(head != null && addHead)
 			{
-				Marshal.Copy(bytes, 0, buffer, size);
-				return Marshal.PtrToStructure(buffer, strcutType);
+				buffer += head.Serialize();
 			}
-			finally
+			else if(addHead && head == null)
 			{
-				Marshal.FreeHGlobal(buffer);
+				LogMgr.LogError("head is Null");
 			}
+
+			buffer += KTool.StructToBytes(_StructData);
+			return buffer.ConverToBytes();
 		}
 
 	}

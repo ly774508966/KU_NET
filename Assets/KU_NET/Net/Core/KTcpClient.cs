@@ -74,7 +74,7 @@ namespace Kubility
 
 		void ConnectCallback(SocketAsyncEventArgs args)
 		{
-			LogMgr.Log("ConnectCallback");
+
 			KThread.StartTask(ThreadSendMessage);
 			KThread.StartTask(ThreadReceiveMessage);
 		}
@@ -94,7 +94,7 @@ namespace Kubility
 
 						m_pool.Pop_FreeForSend(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
 						{
-							LogMgr.Log("Pop_FreeForSend  laststate = "+ _socket.GetSocketState());
+							//LogMgr.Log("Pop_FreeForSend  laststate = "+ _socket.GetSocketState());
 
 							if(!retCode)
 							{
@@ -131,8 +131,7 @@ namespace Kubility
 							_socketEvargs.RemoteEndPoint = _socket.GetRemoteIP();
 							_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
 						}
-						LogMgr.Log("Pop_FreeForReceive  laststate = "+ _socket.GetSocketState() +" retCode ="+retCode
-						           );
+						//LogMgr.Log("Pop_FreeForReceive  laststate = "+ _socket.GetSocketState() +" retCode ="+retCode );
 						//KTool.Dump(_socketEvargs);
 						_socket.ReceiveAsync(_socketEvargs,ReveiveCallBack);
 
@@ -150,6 +149,12 @@ namespace Kubility
 			MessageManager.mIns.GetSendQueue().Push_Back(message);
 		}
 
+		public void Send<T>(BaseMessage message,Action<T> callback)
+		{
+			MessageManager.mIns.GetSendQueue().Push_Back(message);
+			message.Wait_Deserialize<T>(callback);
+		}
+
 		void AcceptEventArg_OnConnectCompleted(object obj,SocketAsyncEventArgs ev)
 		{
 			_socket.SetStateFree();
@@ -162,7 +167,7 @@ namespace Kubility
 			{
 				ev.AcceptSocket = null;
 			}
-			LogMgr.Log("LastOperation = "+ ev.LastOperation.ToString());
+			//LogMgr.Log("LastOperation = "+ ev.LastOperation.ToString());
 			if(ev.LastOperation == SocketAsyncOperation.Connect)
 			{
 				KThread.StartTask(ThreadSendMessage);
@@ -217,8 +222,7 @@ namespace Kubility
 		{
 			byte[] readData = new byte[rlen];
 			System.Array.Copy(Bytes,0,readData,0,rlen);
-
-			BaseMessage.Deserialize(readData);
+			MessageManager.mIns.PushToReceiveBuffer(readData);
 
 		}
 

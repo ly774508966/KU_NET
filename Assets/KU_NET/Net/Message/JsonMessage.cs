@@ -12,97 +12,95 @@ namespace Kubility
 		{
 			this.Flag = 1;
 		}
-
-//		public override byte[] Serialize ()
-//		{
-//			return base.Serialize ();
-//		}
-
-//		public override void Initialize ()
-//		{
-//			base.Initialize ();
-//		}
+		
+		
 	}
+	
 
-
-	public class AbstractJsonData
-	{
-		public int msgid;
-
-	}
-
-	public class JsonMessage :BaseMessage 
+	
+	public sealed class JsonMessage :BaseMessage 
 	{
 
-//		public JsonMessage()
-//		{
-//			this.head.WriteFlag(1);
-//		}
 
-		AbstractJsonData _jsonData;
-
-		public AbstractJsonData jsonData
+		public string jsonData
 		{
 			get
 			{
-				if(string.IsNullOrEmpty(body.m_FirstValue) && _jsonData != null)
-				{
-					Serialize_Data();
-				}
-				return _jsonData;
-			}
-
-			protected set
-			{
-				_jsonData = value;
+				return this.DataBody.m_FirstValue;
 			}
 		}
-
-		public static JsonMessage Create(KMessageType mtype = KMessageType.None,AbstractJsonData data =null,JsonMessageHead  jhead = null )
+		/// <summary>
+		/// create send json data
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="jhead">Jhead.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public static JsonMessage Create<T>(T data,JsonMessageHead  jhead = null )
 		{
 			JsonMessage message = new JsonMessage();
-			message.messageType =mtype;
-			message.jsonData = data;
+			message.messageType =KMessageType.None;
+			message.DataBody.m_FirstValue = ParseUtils.Json_Serialize(data);
 			if(jhead != null)
+			{
 				message.head = jhead;
+				message.messageType= (KMessageType)jhead.CMD;
+			}
+				
 			return message;
 		}
 
-		public void Deserialize_Data<T>() where T :AbstractJsonData
+		public static JsonMessage Create(byte[] buffer,MessageHead  jhead = null )
 		{
-			if(!string.IsNullOrEmpty(this.body.m_FirstValue))
+			JsonMessage message = new JsonMessage();
+			message.messageType =KMessageType.None;
+			message.DataBody.m_FirstValue = System.Text.Encoding.UTF8.GetString(buffer);
+			if(jhead != null)
 			{
-				jsonData = ParseUtils.Json_Deserialize<T>(this.body.m_FirstValue);
+				message.head = jhead;
+				message.messageType= (KMessageType)jhead.CMD;
 			}
-
+			
+			return message;
 		}
-
-		void Serialize_Data()
+		/// <summary>
+		/// receive json data
+		/// </summary>
+		/// <param name="ev">Ev.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public override void Wait_Deserialize<T> (Action<T> ev) 
 		{
-			this.body.m_FirstValue =ParseUtils.Json_Serialize(jsonData);
-		}
 
-		public override byte[] Serialize ()
+			MessageManager.mIns.PushToWaitQueue(this,delegate(string value)
+			{
+				T obj = default(T);
+				if(!string.IsNullOrEmpty(value))
+				{
+					obj = ParseUtils.Json_Deserialize<T>(value);
+				}
+				ev(obj);
+			});
+		}
+		/// <summary>
+		/// Serialize the send data
+		/// </summary>
+		
+		public override byte[] Serialize (bool addHead =true)
 		{
-			byte[] bys = new byte[head.bodyLen + 14];
+			ByteBuffer buffer = new ByteBuffer ();
+			var bys = System.Text.Encoding.UTF8.GetBytes(DataBody.m_FirstValue);
 
-//			int rlen = head.stream.Read(bys,0,14);
-//			if(rlen != 14)
-//			{
-//				while(rlen >0)
-//				{
-//					rlen = head.stream.Read(bys,0,rlen);
-//				}
-//			}
-
-			byte[] bs = System.Text.Encoding.UTF8.GetBytes(this.body.m_FirstValue);
-			System.Array.Copy(bs,0,bys,14,bs.Length);
-			return bys;
-
+			if(head != null && addHead)
+			{
+				head .bodyLen = (uint)bys.Length;
+				buffer += head.Serialize ();
+			}
+				
+			
+			buffer +=bys;
+			
+			return buffer.ConverToBytes();
+			
 		}
-
-
-
 
 	}
 }

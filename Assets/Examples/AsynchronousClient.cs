@@ -146,7 +146,7 @@ public class AsynchronousClient
 			Socket client = (Socket)ar.AsyncState;
 			// Complete sending the data to the remote device.     
 			int bytesSent = client.EndSend(ar);
-//			LogMgr.Log("Client SendCallback  Size ="+bytesSent );
+			LogMgr.Log("Client SendCallback  Size ="+bytesSent );
 			// Signal that all bytes have been sent.     
 			sendDone.Set();
 		}

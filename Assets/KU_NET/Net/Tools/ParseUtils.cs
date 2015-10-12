@@ -17,6 +17,11 @@ public static class ParseUtils
         return  JsonReader.Deserialize <T>(value);
     }
 
+	public static object Json_Deserialize(string value)
+	{
+		return  JsonReader.Deserialize(value);
+	}
+
     public static string Json_Serialize(object value)
     {
         return JsonWriter.Serialize(value);
@@ -26,6 +31,7 @@ public static class ParseUtils
     {
         return JsonReader.CoerceType<T>(value);
     }
+	
 
     public static T XML_Deserialize<T>(string path)
     {
