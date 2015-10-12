@@ -12,17 +12,38 @@ namespace Kubility
 		{
 			this.Flag = 1;
 		}
+<<<<<<< HEAD
 		
 		
+=======
+
+
+>>>>>>> origin/master
 	}
 	
 
 	
 	public sealed class JsonMessage :BaseMessage 
 	{
+<<<<<<< HEAD
+=======
+		
+
+>>>>>>> origin/master
 
 
+<<<<<<< HEAD
 		public string jsonData
+=======
+
+	public class JsonMessage :BaseMessage 
+	{
+
+
+		AbstractJsonData _jsonData;
+
+		public AbstractJsonData jsonData
+>>>>>>> origin/master
 		{
 			get
 			{
@@ -69,6 +90,13 @@ namespace Kubility
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public override void Wait_Deserialize<T> (Action<T> ev) 
 		{
+<<<<<<< HEAD
+=======
+
+			if(jsonData != null)
+				this.body.m_FirstValue +=ParseUtils.Json_Serialize(jsonData);
+		}
+>>>>>>> origin/master
 
 			MessageManager.mIns.PushToWaitQueue(this,delegate(string value)
 			{
@@ -87,7 +115,16 @@ namespace Kubility
 		public override byte[] Serialize (bool addHead =true)
 		{
 			ByteBuffer buffer = new ByteBuffer ();
+<<<<<<< HEAD
 			var bys = System.Text.Encoding.UTF8.GetBytes(DataBody.m_FirstValue);
+=======
+			if(head != null)
+				buffer += head.Serialize ();
+
+			buffer += System.Text.Encoding.UTF8.GetBytes(this.body.m_FirstValue);
+	
+			return buffer.ConverToBytes();
+>>>>>>> origin/master
 
 			if(head != null && addHead)
 			{
