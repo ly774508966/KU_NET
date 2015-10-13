@@ -79,7 +79,7 @@ namespace Kubility
 				{
 					PoolThread(pool);
 				});
-				//new Thread(new ParameterizedThreadStart(PoolThread)).Start(pool);
+
 			}
 			/// <summary>
 			/// dont want to call thread.abort

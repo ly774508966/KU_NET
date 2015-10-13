@@ -10,13 +10,13 @@ this is based on UNITY 5.2.1
 ##HTTP 下载(支持断点续传):
 
 ```csharp
-HttpClient http= new HttpClient()
+HttpClient http= new HttpClient();
 http.BeginDownLoadFileFlushToFile("http://xxxxx/xxxx.apk",Application.persistentDataPath+"/xxx.apk",
-			 delegate(string arg1, float arg2, bool arg3)
-			 {
+delegate(string arg1, float arg2, bool arg3)
+{
 
-				LogMgr.Log("Onprocess " +"  float  ="+ arg2.ToString()  +" isDone "+ arg3.ToString());
-			});
+	LogMgr.Log("Onprocess " +"  float  ="+ arg2.ToString()  +" isDone "+ arg3.ToString());
+});
 			
 http.StartConnect();
 ```
@@ -24,39 +24,40 @@ http.StartConnect();
 ###unAuto start
 
 ```csharp
-HttpClient http= new HttpClient()
+HttpClient http= new HttpClient();
 http.BeginPost("http://xxx",
-			 delegate(string arg1)
-			 {
-
-			});
-http.AddField("---","---");		
+delegate(string arg1)
+{
+	//dosomething
+});
+http.AddField("-xxxx","xxxxxxx");		
 http.StartConnect();
 ```
 
 ###Auto Start
 
 ```csharp
-HttpClient http= new HttpClient()
+HttpClient http= new HttpClient();
 http.BeginGet("http://xxx",
-			 delegate(string arg1, float arg2, bool arg3)
-			 {
-				value = arg2;
-				isDone = arg3;
-				LogMgr.Log("Onprocess " +"  float  ="+ arg2.ToString()  +" isDone "+ arg3.ToString());
-			},true);
+delegate(string arg1, float arg2, bool arg3)
+{
+	//dosomething 
+},true);
 ```
+arg1 表示获取的内容，arg2表示进度，arg3表示是否完成
 
 ##KThread
 kthread 内部维护了一个simple thread pool。
 
 ```csharp
-KThread.StartTask(testTh);
-
-void testTh()
+KThread.StartTask(delegate()
 {
+	PoolThread(pool);
+});
 
-AsynchronousSocketListener.StartListening();
+void PoolThread(object obj)
+{
+	xxxxxxxxxx
 }
 ```
 
@@ -78,6 +79,7 @@ short shortvalue =(short)buffer;
 ```
 
 ByteBuffer 目前不自动支持bool，因为buffer在序列化和反序列化struct的时候，内部的bool自动转为4byte,但是普通的bool，则为1byte，所以期望用户自己处理
+但是如果使用Bool8 和Bool32 则是被支持的
 
 ## socket
 内部封装了一个AsyncSocket, 维护一套Async接口，
@@ -92,11 +94,10 @@ based on MonoDelegateView ,BaseView
 protected override void Awake ()
 {
 	base.Awake ();
-	Vector3 pos = m_view.pos;
-	BaseView.Create<UGUIView> (this, new HideTrans (gameObject));
-	m_view.pos = pos; 
-	button.GetListener ().onPointerClick = ButtonClick;
 
+	BaseView.Create<UGUIView> (this, new HideTrans (gameObject));
+
+	button.GetListener ().onPointerClick = ButtonClick;
 
 }
 
