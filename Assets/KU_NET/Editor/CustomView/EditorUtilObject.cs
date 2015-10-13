@@ -15,14 +15,14 @@ public class GlobalHelperUtils : Editor
 
         GlobalHelper global = (GlobalHelper)target;
 
-        EditorGUILayout.ObjectField("脚本", global, typeof(GlobalHelper),true);
+        EditorGUILayout.ObjectField("脚本", global, typeof(GlobalHelper), true);
 
-//        global.gCamera = (GameObject)EditorGUILayout.ObjectField("公用Object ", global.gCamera, typeof(GameObject), true);
+        //        global.gCamera = (GameObject)EditorGUILayout.ObjectField("公用Object ", global.gCamera, typeof(GameObject), true);
         //EditorGUIUtility.LookLikeControls(120);
         GUILayout.Space(10);
 
-        EditorGUILayout.EnumPopup( "上个场景",global.lastGameScene);
-        EditorGUILayout.EnumPopup("当前场景",global.curGameScene);
+        EditorGUILayout.EnumPopup("上个场景", global.lastGameScene);
+        EditorGUILayout.EnumPopup("当前场景", global.curGameScene);
         GUILayout.Space(10);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.TextField("列表大小", GUILayout.Width(100));

@@ -9,6 +9,12 @@ public class U1View : MonoDelegateView
 
 	public GameObject button;
 	public RawImage image;
+		
+	public ScrollRect scroll;
+	public Scrollbar bar;
+	public Toggle toggle;
+	public InputField inp;
+	int val;
 
 	protected override void Awake ()
 	{
@@ -22,12 +28,8 @@ public class U1View : MonoDelegateView
 
 	}
 
-	int val;
-	public ScrollRect scroll;
-	public Scrollbar bar;
-	public Toggle toggle;
-	public InputField inp;
-	public Dropdown drop;
+
+
 
 	public void ButtonClick (GameObject gobh, BaseEventData data)
 	{

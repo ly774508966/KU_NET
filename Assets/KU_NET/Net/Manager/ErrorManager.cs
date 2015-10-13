@@ -5,89 +5,89 @@ using System.Collections.Generic;
 
 namespace Kubility
 {
-	public enum ErrorType
-	{
-		None = -1,
-		ConnectClose,
-		ConnectFailed,
-		TimeOut,
-		NullRef,
-		ArgError,
-		NetError,
-		UnKnown,
-	}
+    public enum ErrorType
+    {
+        None = -1,
+        ConnectClose,
+        ConnectFailed,
+        TimeOut,
+        NullRef,
+        ArgError,
+        NetError,
+        UnKnown,
+    }
 
-	public class ErrorManager :MonoSingleTon<ErrorManager>
-	{
-		Stack<int> errorList = new Stack<int>();
+    public class ErrorManager : MonoSingleTon<ErrorManager>
+    {
+        Stack<int> errorList = new Stack<int>();
 
-		#region connectevents
+        #region connectevents
 
-		public void Register<T>(T obj) where T:ConnectEvents
-		{
-			obj.m_ConnectCloseEvent += ConnectClose;
-			obj.m_ConnectFailedEvent += ConnectError;
-			obj.m_OthersErrorEvent += UnKnownError;
-			obj.m_TimeOutEvent += TimeOut;
-		}
+        public void Register<T>(T obj) where T : ConnectEvents
+        {
+            obj.m_ConnectCloseEvent += ConnectClose;
+            obj.m_ConnectFailedEvent += ConnectError;
+            obj.m_OthersErrorEvent += UnKnownError;
+            obj.m_TimeOutEvent += TimeOut;
+        }
 
-		void ConnectError()
-		{
-			errorList.Push((int)ErrorType.ConnectFailed);
-		}
+        void ConnectError()
+        {
+            errorList.Push((int)ErrorType.ConnectFailed);
+        }
 
-		void ConnectClose()
-		{
-			errorList.Push((int)ErrorType.ConnectClose);
-		}
+        void ConnectClose()
+        {
+            errorList.Push((int)ErrorType.ConnectClose);
+        }
 
-		void TimeOut()
-		{
-			errorList.Push((int)ErrorType.TimeOut);
-		}
+        void TimeOut()
+        {
+            errorList.Push((int)ErrorType.TimeOut);
+        }
 
-		void UnKnownError(Exception ex)
-		{
-			if(ex.GetType() == typeof(NullReferenceException))
-			{
-				LogMgr.LogError("Null Error");
-				errorList.Push((int)ErrorType.NullRef);
-			}
-			else if(ex.GetType() == typeof(ArgumentException)) //
-			{
-				LogMgr.LogError("参数错误");
-				errorList.Push((int)ErrorType.ArgError);
-			}
-			else if(ex.GetType() == typeof(System.Net.WebException))
-			{
-				LogMgr.LogError("网络错误");
-				errorList.Push((int)ErrorType.NetError);
-			}
-			else if(ex.GetType()== typeof(CustomException))
-			{
-				LogMgr.LogError("自定义异常");
-			}
-			else
-			{
-				errorList.Push((int)ErrorType.UnKnown);
-			}
-		}
-		#endregion
+        void UnKnownError(Exception ex)
+        {
+            if (ex.GetType() == typeof(NullReferenceException))
+            {
+                LogMgr.LogError("Null Error");
+                errorList.Push((int)ErrorType.NullRef);
+            }
+            else if (ex.GetType() == typeof(ArgumentException)) //
+            {
+                LogMgr.LogError("参数错误");
+                errorList.Push((int)ErrorType.ArgError);
+            }
+            else if (ex.GetType() == typeof(System.Net.WebException))
+            {
+                LogMgr.LogError("网络错误");
+                errorList.Push((int)ErrorType.NetError);
+            }
+            else if (ex.GetType() == typeof(CustomException))
+            {
+                LogMgr.LogError("自定义异常");
+            }
+            else
+            {
+                errorList.Push((int)ErrorType.UnKnown);
+            }
+        }
+        #endregion
 
 
-		public ErrorType PopError()
-		{
-			if(errorList.Count >0)
-			{
-				ErrorType error = (ErrorType)errorList.Pop();
-				// do something
+        public ErrorType PopError()
+        {
+            if (errorList.Count > 0)
+            {
+                ErrorType error = (ErrorType)errorList.Pop();
+                // do something
 
-				return error;
-			}
+                return error;
+            }
 
-			return ErrorType.None;
-		}
-	}
+            return ErrorType.None;
+        }
+    }
 }
 
 

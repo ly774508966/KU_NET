@@ -2,14 +2,15 @@
 using System.Collections;
 using UnityEditor;
 
-public class PackageImporter : AssetPostprocessor {
-	
-	static void OnPostprocessAllAssets (string[] importedAssets, string[] deletedAssets,string[] movedAssets, string[] movedFromAssetPaths) 
-	{
+public class PackageImporter : AssetPostprocessor
+{
 
-		if(importedAssets.Length >0)
-		{
-			KbEditorUtils.AddTag("Kubility");
-		}
-	}
+    static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+    {
+
+        if (importedAssets.Length > 0)
+        {
+            KbEditorUtils.AddTag("Kubility");
+        }
+    }
 }
