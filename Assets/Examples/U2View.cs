@@ -42,6 +42,7 @@ public class U2View : MonoDelegateView,IDragHandler
 
 	public void ButtonClick2 (GameObject gobh, BaseEventData data)
 	{
+
 #if KUGUI
 		Vector3 size = new Vector3 (mbt.rectTransform.sizeDelta.x, mbt.rectTransform.sizeDelta.y + 100, 0);
 		gameObject.AutoAlign (size, (UIAlign)((val++) % 5));

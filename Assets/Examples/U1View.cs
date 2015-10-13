@@ -13,9 +13,9 @@ public class U1View : MonoDelegateView
 	protected override void Awake ()
 	{
 		base.Awake ();
-		Vector3 pos = m_view.pos;
+//		Vector3 pos = m_view.pos;
 		BaseView.Create<UGUIView> (this, new HideTrans (gameObject));
-		m_view.pos = pos; 
+//		m_view.pos = pos; 
 		button.GetListener ().onPointerClick = ButtonClick;
 
 //		m_view.Push_AutoUIBehaviour (image);

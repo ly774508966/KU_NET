@@ -20,7 +20,13 @@ namespace Kubility
 	public sealed class JsonMessage :BaseMessage
 	{
 
-		public string jsonData;
+		public string jsonData
+		{
+			get
+			{
+				return DataBody.m_FirstValue;
+			}
+		}
 
 		/// <summary>
 		/// create send json data
