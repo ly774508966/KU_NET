@@ -1,4 +1,4 @@
-﻿//#define USE_COR
+﻿#define USE_COR
 
 using UnityEngine;
 using System;
@@ -182,7 +182,7 @@ namespace Kubility
             m_curRequest.field1 = HttpType.POST;
             m_SuccessEvent = callback;
 #if USE_COR
-
+			requestList.Push(m_curRequest);
 			m_task = new Task (UnityConnect (callback), AutoStart);
 #else
             m_varUtils.field0 = 0;
@@ -199,8 +199,8 @@ namespace Kubility
             m_curRequest.field1 = HttpType.GET;
             this.m_SuccessEvent = callback;
 #if USE_COR
-
-			m_task = new Task (UnityConnect (callback), AutoStart);
+			requestList.Push(m_curRequest);
+            m_task = new Task (UnityConnect (callback), AutoStart);
 #else
             m_varUtils.field0 = 0;
             m_thread = KThread.StartTask(HttpThread, false);
@@ -214,8 +214,8 @@ namespace Kubility
 			m_curRequest.field0 = URL;
 			m_curRequest.field1 = HttpType.DOWNLOADFILE_TOMEMORY;
 #if USE_COR
-			
-			m_task = new Task (UnityConnect (callback), AutoStart);
+			requestList.Push(m_curRequest);
+            m_task = new Task (UnityConnect (callback), AutoStart);
 #else
 			
 			this.onProcess = callback;
@@ -234,8 +234,9 @@ namespace Kubility
             m_curRequest.field0 = URL;
             m_curRequest.field1 = HttpType.DOWNLOADFILE;
 #if USE_COR
-
-			m_task = new Task (UnityConnect (callback), AutoStart);
+			m_curRequest.field2 = Filepath;
+			requestList.Push(m_curRequest);
+            m_task = new Task (UnityConnect (callback), AutoStart);
 #else
 
             this.onProcess = callback;
@@ -252,10 +253,15 @@ namespace Kubility
 #if USE_COR
 		IEnumerator UnityConnect (object obj)
 		{
+			if(requestList.Count == 0)
+			{
+				yield break;
+			}
 
-			var m_state = m_curRequest.field1;
+			var request =this.requestList.Pop();
+			HttpType m_state = request.field1;
 
-			WWW www = GetForm (m_state == HttpType.POST);
+			WWW www = GetForm (request);
 			yield return www;
 			
 			if (www.error == null) 
@@ -266,13 +272,25 @@ namespace Kubility
 					if (callback != null)
 						callback (www.text);
 				} 
-				else if (m_state == HttpType.DOWNLOADFILE)
+				else if (m_state == HttpType.DOWNLOADFILE || m_state == HttpType.DOWNLOADFILE_TOMEMORY)
 				{
-					m_stream = new MemoryStream (www.bytes);
-					MonoDelegate.mIns.Coroutine_Delay (30, delegate() {
-												m_stream.Close ();
-												m_stream = null;
-										});
+
+					Action<byte[], float, bool> callback = (Action<byte[], float, bool>) obj ;
+					if(callback != null)
+					{
+						callback(www.bytes,1f,true);
+					}
+
+
+					if(m_state == HttpType.DOWNLOADFILE)
+					{
+						var data = request.field2 as string;
+
+						FileStream fs = new FileStream(data,FileMode.OpenOrCreate,FileAccess.ReadWrite);
+						fs.Write(www.bytes,0,www.bytes.Length);
+						fs.Close();
+                    }
+
 				}
 
 			} 
@@ -295,6 +313,7 @@ namespace Kubility
 
 			if (!m_task.Running) 
 			{
+
 				m_task.Start ();
 			}
 			else
@@ -541,9 +560,6 @@ namespace Kubility
 						total += readLen;
 						maxLen = Math.Max(readLen, maxLen);
 					}
-//					bvalue =true;
-
-//					LogMgr.LogError("total =" + total.ToString() + " maxSpeed =" + maxLen.ToString());
 			
 				}
 				catch (Exception ex)
@@ -659,19 +675,19 @@ namespace Kubility
 			return m_stream;
 		}
 
-		WWW GetForm (bool isPost)
+		WWW GetForm (MiniTuple<string, HttpType, object> req)
 		{
 			WWW www;
-			if (isPost) {
+			if (req.field1 == HttpType.POST) {
 				if (m_form == null)
 				{
 					LogMgr.LogError ("Form is Null May Cause Erros while Use Http Post!");
 				}
-				www = new WWW (m_curRequest.field0, m_form);
+				www = new WWW (req.field0, m_form);
 			} 
 			else 
 			{
-				www = new WWW (m_curRequest.field0);
+				www = new WWW (req.field0);
 			}
 
 			return www;
