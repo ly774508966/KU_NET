@@ -186,16 +186,16 @@ public class Manager : MonoBehaviour
 			
 			http.StartConnect ();
 
-			http.BeginDownLoadFileFlushToMemory ("http://118.192.69.207:8083/monster.apk",
-//			                                   Application.persistentDataPath + "/mons.apk",
-			delegate(byte[] arg1, float arg2, bool arg3)
-			{
-				value = arg2;
-				isDone = arg3;
-				LogMgr.Log ("FlushToMemory Onprocess " + "  float  =" + arg2.ToString () + " isDone " + arg3.ToString ());
-			});
-			
-			http.StartConnect ();
+//			http.BeginDownLoadFileFlushToMemory ("http://118.192.69.207:8083/monster.apk",
+////			                                   Application.persistentDataPath + "/mons.apk",
+//			delegate(byte[] arg1, float arg2, bool arg3)
+//			{
+//				value = arg2;
+//				isDone = arg3;
+//				LogMgr.Log ("FlushToMemory Onprocess " + "  float  =" + arg2.ToString () + " isDone " + arg3.ToString ());
+//			});
+//			
+//			http.StartConnect ();
 		}
 
 	}
