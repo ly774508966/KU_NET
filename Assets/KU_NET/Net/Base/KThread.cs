@@ -407,7 +407,7 @@ namespace Kubility
 
                     th.VoidEv += vev;
                     th.SEv = Check;
-					LogMgr.LogError("now th = "+ th.GetHashCode());
+
                     if (th.m_thread.ThreadState == ThreadState.Unstarted)
                     {
                         th.m_thread.Start();
