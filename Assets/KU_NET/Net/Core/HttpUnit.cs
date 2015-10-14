@@ -1,4 +1,4 @@
-﻿#define USE_COR
+﻿//#define USE_COR
 
 using UnityEngine;
 using System;
