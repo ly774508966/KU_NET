@@ -1,4 +1,4 @@
-﻿//#define USE_COR
+﻿#define USE_COR
 
 using UnityEngine;
 using System;
@@ -36,10 +36,10 @@ namespace Kubility
         ClsTuple<string, HttpType, object> m_curRequest;
 
 #if USE_COR
-				Task m_task;
-				WWWForm m_form;
-				Stream m_stream;
-				public readonly bool Unity = true;
+		Task m_task;
+		WWWForm m_form;
+		Stream m_stream;
+		public readonly bool Unity = true;
 
 
 #else
@@ -180,7 +180,7 @@ namespace Kubility
             m_SuccessEvent = callback;
 #if USE_COR
 
-						m_task = new Task (UnityConnect (callback), AutoStart);
+			m_task = new Task (UnityConnect (callback), AutoStart);
 #else
             m_varUtils.field0 = 0;
             m_thread = KThread.StartTask(HttpThread, false);
@@ -197,7 +197,7 @@ namespace Kubility
             this.m_SuccessEvent = callback;
 #if USE_COR
 
-						m_task = new Task (UnityConnect (callback), AutoStart);
+			m_task = new Task (UnityConnect (callback), AutoStart);
 #else
             m_varUtils.field0 = 0;
             m_thread = KThread.StartTask(HttpThread, false);
@@ -213,7 +213,7 @@ namespace Kubility
             m_curRequest.field1 = HttpType.DOWNLOADFILE;
 #if USE_COR
 
-						m_task = new Task (UnityConnect (callback), AutoStart);
+			m_task = new Task (UnityConnect (callback), AutoStart);
 #else
 
             this.onProcess = callback;
@@ -227,40 +227,43 @@ namespace Kubility
 
         }
 
-
-
-
 #if USE_COR
-				IEnumerator UnityConnect (object obj)
-				{
+		IEnumerator UnityConnect (object obj)
+		{
 
-						var m_state = m_curRequest.field1;
+			var m_state = m_curRequest.field1;
 
-						WWW www = GetForm (m_state == HttpType.POST);
-						yield return www;
+			WWW www = GetForm (m_state == HttpType.POST);
+			yield return www;
 			
-						if (www.error == null) {
-								if (m_state == HttpType.GET || m_state == HttpType.POST) {
-
-										Action<string> callback = (Action<string>)obj;
-										if (callback != null)
-												callback (www.text);
-								} else if (m_state == HttpType.DOWNLOADFILE) {
-
-										m_stream = new MemoryStream (www.bytes);
-
-										MonoDelegate.mIns.Coroutine_Delay (30, delegate() {
+			if (www.error == null) 
+			{
+				if (m_state == HttpType.GET || m_state == HttpType.POST)
+				{
+					Action<string> callback = (Action<string>)obj;
+					if (callback != null)
+						callback (www.text);
+				} 
+				else if (m_state == HttpType.DOWNLOADFILE)
+				{
+					m_stream = new MemoryStream (www.bytes);
+					MonoDelegate.mIns.Coroutine_Delay (30, delegate() {
 												m_stream.Close ();
 												m_stream = null;
 										});
-								}
-
-						} else {
-								LogMgr.LogError ("WWW : " + m_curRequest.field0 + "  error!  = " + www.error);
-						}
-						m_state = HttpType.FREE;
-						www.Dispose ();
 				}
+
+			} 
+			else
+			{
+				if(m_OthersErrorEvent != null)
+				{
+					m_OthersErrorEvent(new CustomException("www error",ErrorType.NetError));
+				}
+			}
+			m_state = HttpType.FREE;
+			www.Dispose ();
+			}
 		
 #endif
 
@@ -268,11 +271,14 @@ namespace Kubility
         {
 #if USE_COR
 
-						if (!m_task.Running) {
-								m_task.Start ();
-						} else {
-								LogMgr.Log ("Http Coroutine is Runing");
-						}
+			if (!m_task.Running) 
+			{
+				m_task.Start ();
+			}
+			else
+			{
+				LogMgr.Log ("Http Coroutine is Runing");
+			}
 #else
             try
             {
@@ -310,12 +316,6 @@ namespace Kubility
         }
 
 #if USE_COR
-				
-
-
-
-
-
 #else
         void HttpThread()
         {
@@ -371,13 +371,7 @@ namespace Kubility
 #endif
 
 #if USE_COR
-				
-
-
 #else
-
-
-
         void ThreadDownLoad()
         {
             var curRequest = requestList.Pop();
@@ -492,10 +486,11 @@ namespace Kubility
         public void AddField(string field, string content)
         {
 #if USE_COR
-						if (m_form == null) {
-								m_form = new WWWForm ();
-						}
-						m_form.AddField (field, content);
+			if (m_form == null)
+			{
+				m_form = new WWWForm ();
+			}
+			m_form.AddField (field, content);
 #else
             if (m_varUtils.field0 == 0)
             {
@@ -517,10 +512,11 @@ namespace Kubility
         public void AddField(string field, int content)
         {
 #if USE_COR
-						if (m_form == null) {
-								m_form = new WWWForm ();
-						}
-						m_form.AddField (field, content);
+			if (m_form == null)
+			{
+				m_form = new WWWForm ();
+			}
+			m_form.AddField (field, content);
 #else
             if (m_varUtils.field0 == 0)
             {
@@ -539,19 +535,18 @@ namespace Kubility
         }
 
 #if USE_COR
-				public void AddBinaryData (string field, byte[] content)
-				{
+		public void AddBinaryData (string field, byte[] content)
+		{
 
-						if (m_form == null) {
-								m_form = new WWWForm ();
-						}
-						m_form.AddBinaryData (field, content);
-
-				}
+			if (m_form == null)
+			{
+				m_form = new WWWForm ();
+			}
+			m_form.AddBinaryData (field, content);
+		}
 
 
 #endif
-
 
         #region helper
 
@@ -579,30 +574,28 @@ namespace Kubility
 
 
 #if USE_COR
-				public Stream GetStream ()
+		public Stream GetStream ()
+		{
+			return m_stream;
+		}
+
+		WWW GetForm (bool isPost)
+		{
+			WWW www;
+			if (isPost) {
+				if (m_form == null)
 				{
-						return m_stream;
+					LogMgr.LogError ("Form is Null May Cause Erros while Use Http Post!");
 				}
+				www = new WWW (m_curRequest.field0, m_form);
+			} 
+			else 
+			{
+				www = new WWW (m_curRequest.field0);
+			}
 
-				WWW GetForm (bool isPost)
-				{
-						WWW www;
-						if (isPost) {
-								if (m_form == null) {
-
-										LogMgr.LogError ("Form is Null May Cause Erros while Use Http Post!");
-								}
-								www = new WWW (m_curRequest.field0, m_form);
-						} else {
-								www = new WWW (m_curRequest.field0);
-						}
-			
-			
-						return www;
-				}
-
-
-
+			return www;
+		}
 
 #else
 
