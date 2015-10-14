@@ -203,7 +203,7 @@ namespace Kubility
 
 			if(ev.BytesTransferred >0)
 			{
-				LogMgr.Log("ReveiveCallBack 1  = "+ ev.BytesTransferred  +" ev.SocketError = "+ ev.SocketError);
+				LogMgr.Log("ReveiveCallBack bytes size = "+ ev.BytesTransferred  +" ev.SocketError = "+ ev.SocketError);
 				if(ev.SocketError == SocketError.Success)
 				{
 

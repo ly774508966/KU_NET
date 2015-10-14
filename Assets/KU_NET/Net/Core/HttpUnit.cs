@@ -61,7 +61,7 @@ namespace Kubility
 				VoidDelegate _ConnectCloseEvent = null;
 				VoidDelegate _ConnectFailedEvent = null;
 				VoidDelegate _TimeOutEvent = null;
-				VoidDelegate _OthersErrorEvent = null;
+				ExceptionDelegate _OthersErrorEvent = null;
 				Action<string> _SuccessEvent = null;
 		
 				Action<byte[],float,bool> _onProcess;
@@ -70,11 +70,17 @@ namespace Kubility
 						get {
 								return _ConnectCloseEvent;
 						}
+						set {
+							_ConnectCloseEvent =value;
+						}
 				}
 
 				public VoidDelegate m_ConnectFailedEvent {
 						get {
 								return _ConnectFailedEvent;
+						}
+						set {
+							_ConnectFailedEvent =value;
 						}
 				}
 
@@ -82,11 +88,17 @@ namespace Kubility
 						get {
 								return _TimeOutEvent;
 						}
+						set {
+								_TimeOutEvent =value;
+						}
 				}
 
-				public VoidDelegate m_OthersErrorEvent {
+				public ExceptionDelegate m_OthersErrorEvent {
 						get {
 								return _OthersErrorEvent;
+						}
+						set {
+							_OthersErrorEvent =value;
 						}
 				}
 
@@ -200,7 +212,7 @@ namespace Kubility
 
 
 
-				#if USE_COR
+#if USE_COR
 				IEnumerator UnityConnect (object obj)
 				{
 
@@ -397,12 +409,14 @@ namespace Kubility
 
 
 														} catch (Exception ex) {
-																LogMgr.Log ("Exception  = " + ex);
+																	if (m_OthersErrorEvent != null) {
+																				m_OthersErrorEvent (ex);
+																	}
 
 														}
 												} else {
 														if (m_OthersErrorEvent != null) {
-																m_OthersErrorEvent ();
+																m_OthersErrorEvent (new CustomException("reponse is Null ",ErrorType.ConnectFailed));
 														}
 														break;
 												}
@@ -557,11 +571,11 @@ namespace Kubility
 										}
 								} else if (webEx.Status != WebExceptionStatus.Success) {
 										if (m_OthersErrorEvent != null) {
-												m_OthersErrorEvent ();
+												m_OthersErrorEvent (webEx);
 										}
 								}
 						}
-						LogMgr.Log ("Exception  = " + webEx);
+//						LogMgr.Log ("Exception  = " + webEx);
 
 				}
 

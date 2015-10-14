@@ -38,16 +38,19 @@ public class Manager : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
-		var buffffer = new ByteBuffer ();
-		buffffer += 1f;
-		buffffer += 12;
-		buffffer += "sda1asd";
-
-		var v1 = (float)buffffer;
-		var v2 = (int)buffffer;
-		var v3 = (string)buffffer;
 
 
+		var buffer = new NetByteBuffer (1024);
+		buffer += 1.452f;
+		buffer += (uint)12;
+		buffer += "sda1asd";
+
+		var v1 = (float)buffer;
+		var v2 = (int)buffer;
+		var v3 = (string)buffer;
+
+
+		LogMgr.LogError("bitconvert "+ BitConverter.IsLittleEndian);
 		http = new HttpClient ();
 		KThread.StartTask (ThreadListener);
 
@@ -58,7 +61,7 @@ public class Manager : MonoBehaviour
 		mess.charValue = 2;
 		mess.doubleValue = 2.3;
 		mess.floatValue = 1.5f;
-		mess.info = "sjy";
+		mess.info = "i'm fine @ ~~~ 你好";
 		mess.msgID = 102;
 
 
@@ -104,47 +107,47 @@ public class Manager : MonoBehaviour
 		});
 
 
-		var ppt = new Test ();
-		ppt.val.Add (123);
-		ppt.val.Add (246);
-		ppt.val.Add (45);
-		var pphead = new JsonMessageHead ();
-		var ppdata = JsonMessage.Create<Test> (ppt, pphead);
+		var test = new Test ();
+		test.val.Add (123);
+		test.val.Add (246);
+		test.val.Add (45);
+		var Jsonhead = new JsonMessageHead ();
+		var jsonMessage = JsonMessage.Create<Test> (test, Jsonhead);
 
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 			KTool.Dump (obj);
 
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});
-		client.Send<Test> (ppdata, delegate(Test obj) {
+		client.Send<Test> (jsonMessage, delegate(Test obj) {
 			LogMgr.LogError ("json");
 //			KTool.Dump (obj);
 		});

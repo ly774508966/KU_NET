@@ -56,7 +56,7 @@ namespace Kubility
 		
 		public override byte[] Serialize (bool addHead =true)
 		{
-			ByteBuffer buffer = new ByteBuffer();
+			ByteBuffer buffer = new ByteBuffer(512);
 			if(head != null && addHead)
 			{
 				buffer += head.Serialize();
@@ -66,7 +66,7 @@ namespace Kubility
 				LogMgr.LogError("head is Null");
 			}
 
-			buffer += KTool.StructToBytes(_StructData);
+			buffer +=  KTool.StructToBytes(_StructData);
 			return buffer.ConverToBytes();
 		}
 

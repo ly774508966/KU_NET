@@ -3,82 +3,11 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 
 namespace Kubility
 {
-	public struct Bool8
-	{
-		byte value;
 
-		public static Bool8 ToBool8(byte[] bys)
-		{
-			Bool8 kvalue;
-			kvalue.value = bys [0];
-			return kvalue;
-		}
-
-		public byte[] GetBytes()
-		{
-			return BitConverter.GetBytes (value);
-		}
-
-		public static implicit  operator bool (Bool8 bvalue)
-		{
-			return bvalue.value == 0 ? false : true;
-		}
-
-		public static implicit  operator Bool8 (bool bvalue)
-		{
-			Bool8 newvalue;
-			newvalue.value = bvalue ? (byte)1 :(byte) 0;
-			return newvalue;
-		}
-
-		public static explicit  operator Bool8 (Bool32 bvalue)
-		{
-			Bool8 newvalue;
-			newvalue.value = bvalue ? (byte)1 :(byte) 0;
-			return newvalue;
-		}
-
-
-	}
-
-	public struct Bool32
-	{
-		int value;
-
-		public static Bool32 ToBool32(byte[] bys)
-		{
-
-			Bool32 kvalue;
-			kvalue.value = BitConverter.ToInt32 (bys,0);
-			return kvalue;
-		}
-		public byte[] GetBytes()
-		{
-			return BitConverter.GetBytes (value);
-		}
-
-		public static implicit  operator bool (Bool32 bvalue)
-		{
-			return bvalue.value == 0 ? false : true;
-		}
-
-		public static implicit  operator Bool32 (bool bvalue)
-		{
-			Bool32 newvalue;
-			newvalue.value = bvalue ? 1 : 0;
-			return newvalue;
-		}
-
-		public static explicit  operator Bool32 (Bool8 bvalue)
-		{
-			Bool32 newvalue;
-			newvalue.value = bvalue ? 1 : 0;
-			return newvalue;
-		}
-	}
 
 	/// <summary>
 	/// 本地数据缓冲类(as ADT)
@@ -94,17 +23,15 @@ namespace Kubility
 		}
 
 
-		byte[] buffer;
-		/// <summary>
-		/// next pos
-		/// </summary>
-		int Position;
+		protected byte[] buffer;
 
-		public ByteBuffer()
-		{
-			buffer = new byte[1024];
-			Position = 0;
-		}
+		protected int Position;
+
+//		public ByteBuffer()
+//		{
+//			buffer = new byte[1024];
+//			Position = 0;
+//		}
 
 		public ByteBuffer(int size)
 		{
@@ -115,7 +42,7 @@ namespace Kubility
 		public ByteBuffer(byte[] data) 
 		{
 			buffer = new byte[data.Length];
-			Position = data.Length-1;
+			Position = data.Length;
 
 			System.Array.Copy(data,0,buffer,0,data.Length);
 		}
@@ -134,23 +61,22 @@ namespace Kubility
 			}
 			else if( size < buffer.Length)
 			{
-				if(DataCount > size)
-					Position = size-1;
+				Position = size;
 
-				System.Array.Resize(ref buffer,size);
+				System.Array.Resize(ref buffer,size+1);//at least 1 byte
+				buffer[size] =0;//clear
 
 			}
 		}
 
-		public byte[] Read(int begin,int len)
+		public virtual byte[] Read(int begin,int len)
 		{
 			if(len > DataCount-begin)
 				len = DataCount-begin;
 
 			byte[] bys = new byte[len];
 
-			int i =0;
-			int j =0;
+			int i =0,j=0;
 			for(i = begin; i < begin + len;++i,++j)
 			{
 				bys[j] = this.buffer[i];
@@ -165,9 +91,6 @@ namespace Kubility
 			{
 				ReSize(0);
 			}
-
-
-
 			return bys;
 		}
 
@@ -176,7 +99,7 @@ namespace Kubility
 			System.Array.Copy(buffer,sourceIndex,destinationArray,destinationIndex,length);
 		}
 
-		void IncreaseCapacity(int size)
+		protected void IncreaseCapacity(int size)
 		{
 			byte[] newbuffer = new byte[size];
 			Array.Copy(buffer,0,newbuffer,0,buffer.Length);
@@ -185,19 +108,11 @@ namespace Kubility
 
 		}
 
-
-		public void Clear()
-		{
-			buffer = null;
-			buffer = new byte[1024];
-			Position =0;
-
-		}
 		/// <summary>
 		/// 清理指定大小的数据
 		/// </summary>
 		/// <param name="len">Length.</param>
-		public void Clear(int len)
+		public void Clear(int len =-1)
 		{
 			if(len > buffer.Length)
 			{
@@ -217,16 +132,26 @@ namespace Kubility
 				Position -= len;
 
 			}
+			else
+			{
+				buffer = null;
+				buffer = new byte[512];
+				Position =0;
+			}
 
 			
 		}
 
-		public byte[] ConverToBytes()
+		public byte[] ConverToBytes(bool clean =false)
 		{
 			if(DataCount >0)
 			{
 				byte[] newbys = new byte[DataCount];
 				Copy(0,newbys,0,DataCount);
+				if(clean)
+				{
+					Clear(DataCount);
+				}
 				return newbys;
 			}
 			else
@@ -240,7 +165,33 @@ namespace Kubility
 			return new MemoryStream(buffer);
 		}
 
+
+
 		#region operater
+
+		public static ByteBuffer operator  +(ByteBuffer left,ByteBuffer right)
+		{
+			if(right != null)
+			{
+				int nextsize = right.DataCount + left.Position;
+				if(nextsize > left.buffer.Length)
+				{
+					left.IncreaseCapacity(nextsize);
+				}
+
+				int endpos = left.Position +right.DataCount;
+				for(int i=left.Position,j=0; i < endpos ;++i,++j)
+				{
+					left.buffer[i] = right.buffer[j];
+				}
+				right.Position =0;
+
+				left.Position += right.DataCount;
+			}
+			
+			return left;
+		}
+
 		public static ByteBuffer operator  +(ByteBuffer left,byte[] right)
 		{
 			if(right != null)
@@ -260,15 +211,10 @@ namespace Kubility
 
 		public static ByteBuffer operator  +(ByteBuffer left,int right)
 		{
-			left += BitConverter.GetBytes(right);	
+			left +=BitConverter.GetBytes(right);	
 			return left;
 		}
-		//bitconver 将bool转为byte为1个字节，Marshal则直接取出来4个字节，不一致，所以bool类型，用户自己处理
-//		public static ByteBuffer operator  +(ByteBuffer left,bool right)
-//		{
-//			left += BitConverter.GetBytes(right);	
-//			return left;
-//		}
+
 
 		public static ByteBuffer operator +(ByteBuffer left,Bool8 right)
 		{
@@ -299,6 +245,31 @@ namespace Kubility
 			left += BitConverter.GetBytes(right);	
 			return left;
 		}
+
+		public static ByteBuffer operator  +(ByteBuffer left,long right)
+		{
+			left += BitConverter.GetBytes(right);	
+			return left;
+		}
+
+		public static ByteBuffer operator  +(ByteBuffer left,uint right)
+		{
+			left += BitConverter.GetBytes(right);	
+			return left;
+		}
+
+		public static ByteBuffer operator  +(ByteBuffer left,ushort right)
+		{
+			left += BitConverter.GetBytes(right);	
+			return left;
+		}
+
+		public static ByteBuffer operator  +(ByteBuffer left,ulong right)
+		{
+			left += BitConverter.GetBytes(right);	
+			return left;
+		}
+
 
 		public static ByteBuffer operator  +(ByteBuffer left,string right)
 		{
@@ -349,7 +320,7 @@ namespace Kubility
 			return default(int);
 		}
 
-		public static explicit  operator UInt32 (ByteBuffer left)
+		public static explicit  operator uint (ByteBuffer left)
 		{
 			if(left != null && left.DataCount >= ByteStream.INT32_LEN)
 			{
@@ -412,6 +383,32 @@ namespace Kubility
 			}
 			LogMgr.LogError("Read from ByteBuffer Error");
 			return default(ushort);
+		}
+
+		public static explicit  operator ulong (ByteBuffer left)
+		{
+			if(left != null && left.DataCount >= ByteStream.LONG_LEN)
+			{
+				byte[] tempBys = new byte[ByteStream.LONG_LEN];
+				Array.Copy(left.buffer,0,tempBys,0,ByteStream.LONG_LEN);
+				left.Clear(ByteStream.LONG_LEN);
+				return BitConverter.ToUInt64(tempBys,0);
+			}
+			LogMgr.LogError("Read from ByteBuffer Error");
+			return default(ulong);
+		}
+
+		public static explicit  operator long (ByteBuffer left)
+		{
+			if(left != null && left.DataCount >= ByteStream.LONG_LEN)
+			{
+				byte[] tempBys = new byte[ByteStream.LONG_LEN];
+				Array.Copy(left.buffer,0,tempBys,0,ByteStream.LONG_LEN);
+				left.Clear(ByteStream.LONG_LEN);
+				return BitConverter.ToInt64(tempBys,0);
+			}
+			LogMgr.LogError("Read from ByteBuffer Error");
+			return default(long);
 		}
 
 		public static explicit  operator string (ByteBuffer left)

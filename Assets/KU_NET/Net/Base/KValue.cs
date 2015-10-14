@@ -10,6 +10,80 @@ using System.IO;
 
 namespace Kubility
 {
+
+	public struct Bool8
+	{
+		byte value;
+		
+		public static Bool8 ToBool8(byte[] bys)
+		{
+			Bool8 kvalue;
+			kvalue.value = bys [0];
+			return kvalue;
+		}
+		
+		public byte[] GetBytes()
+		{
+			return BitConverter.GetBytes (value);
+		}
+		
+		public static implicit  operator bool (Bool8 bvalue)
+		{
+			return bvalue.value == 0 ? false : true;
+		}
+		
+		public static implicit  operator Bool8 (bool bvalue)
+		{
+			Bool8 newvalue;
+			newvalue.value = bvalue ? (byte)1 :(byte) 0;
+			return newvalue;
+		}
+		
+		public static explicit  operator Bool8 (Bool32 bvalue)
+		{
+			Bool8 newvalue;
+			newvalue.value = bvalue ? (byte)1 :(byte) 0;
+			return newvalue;
+		}
+		
+		
+	}
+	
+	public struct Bool32
+	{
+		int value;
+		
+		public static Bool32 ToBool32(byte[] bys)
+		{
+			
+			Bool32 kvalue;
+			kvalue.value = BitConverter.ToInt32 (bys,0);
+			return kvalue;
+		}
+		public byte[] GetBytes()
+		{
+			return BitConverter.GetBytes (value);
+		}
+		
+		public static implicit  operator bool (Bool32 bvalue)
+		{
+			return bvalue.value == 0 ? false : true;
+		}
+		
+		public static implicit  operator Bool32 (bool bvalue)
+		{
+			Bool32 newvalue;
+			newvalue.value = bvalue ? 1 : 0;
+			return newvalue;
+		}
+		
+		public static explicit  operator Bool32 (Bool8 bvalue)
+		{
+			Bool32 newvalue;
+			newvalue.value = bvalue ? 1 : 0;
+			return newvalue;
+		}
+	}
 	
 		[StructLayout (LayoutKind.Explicit)]
 		public class Union<T,V>
@@ -292,32 +366,6 @@ namespace Kubility
 		}
 
 
-		
-	
-		/// <summary>
-		/// Value error.
-		/// </summary>
-		public class ValueError:System.Exception
-		{
-		
-				public ValueError () : base ()
-				{
-			
-				}
-
-				public ValueError (string errInfo) : base (errInfo)
-				{
-			
-				}
-
-				public ValueError (string errinfo, Exception ex) : base (errinfo, ex)
-				{
-			
-				}
-		}
-
-	
-	
 		public class Trustee<T>
 		{
 				private T t;

@@ -5,19 +5,20 @@ using System;
 namespace Kubility
 {
 		public delegate void VoidDelegate ();
+		public delegate void ExceptionDelegate(Exception ex);
 
 		/// <summary>
 		/// Connect events.
 		/// </summary>
 		public interface ConnectEvents
 		{
-				VoidDelegate m_ConnectCloseEvent { get; }
+				VoidDelegate m_ConnectCloseEvent { get; set;}
 
-				VoidDelegate m_ConnectFailedEvent{ get; }
+				VoidDelegate m_ConnectFailedEvent{ get;set; }
 
-				VoidDelegate m_TimeOutEvent{ get; }
+				VoidDelegate m_TimeOutEvent{ get;set; }
 
-				VoidDelegate m_OthersErrorEvent{ get; }
+				ExceptionDelegate m_OthersErrorEvent{ get;set; }
 
 				Action<string> m_SuccessEvent{ get; set; }
 

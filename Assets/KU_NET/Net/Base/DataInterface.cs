@@ -25,7 +25,7 @@ namespace Kubility
 	public static class StructDataFactory
 	{
 
-		public static StructMessage Create(ByteBuffer data,MessageHead head)  
+		public static StructMessage Create(byte[] data,MessageHead head)  
 		{
 
 			if(head.CMD == 102)

@@ -47,10 +47,13 @@ namespace Kubility
 			return message;
 		}
 
-		public static JsonMessage Create (byte[] buffer, MessageHead  jhead = null)
+		public static JsonMessage CreateAsNet (byte[] buffer, MessageHead  jhead = null)
 		{
 			JsonMessage message = new JsonMessage ();
 			message.messageType = KMessageType.None;
+			if(BitConverter.IsLittleEndian)
+				Array.Reverse(buffer);
+
 			message.DataBody.m_FirstValue = System.Text.Encoding.UTF8.GetString (buffer);
 			if (jhead != null) {
 				message.head = jhead;
@@ -83,7 +86,7 @@ namespace Kubility
 		
 		public override byte[] Serialize (bool addHead = true)
 		{
-			ByteBuffer buffer = new ByteBuffer ();
+			ByteBuffer buffer = new ByteBuffer (1024);
 
 			var bys = System.Text.Encoding.UTF8.GetBytes (DataBody.m_FirstValue);
 
@@ -92,7 +95,8 @@ namespace Kubility
 				buffer += head.Serialize ();
 			}
 				
-			
+			if(BitConverter.IsLittleEndian)
+				Array.Reverse(bys);
 			buffer += bys;
 			
 			return buffer.ConverToBytes ();

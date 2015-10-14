@@ -15,13 +15,10 @@ namespace Kubility
 		KHeart_Beat,
 	}
 
-
-
-	
 	public class MessageHead
 	{
 		
-		protected ByteBuffer _buffer;
+		protected NetByteBuffer _buffer;
 		
 		public const int HeadLen = 14;
 		
@@ -90,7 +87,7 @@ namespace Kubility
 			}
 		}
 		
-		public ByteBuffer buffer
+		public NetByteBuffer buffer
 		{
 			get
 			{
@@ -105,9 +102,8 @@ namespace Kubility
 		
 		public MessageHead()
 		{
-
 			this.Version = Config.mIns.Version;
-			this.buffer = new ByteBuffer();
+
 		}
 		
 		public virtual void Reset()
@@ -142,7 +138,7 @@ namespace Kubility
 		
 		public virtual void  Read(byte[] bytes)
 		{
-			buffer += bytes;
+			buffer  = new NetByteBuffer(bytes);
 			Version =(UInt32)buffer;
 			Flag =(short)buffer;
 			CMD =(UInt32)buffer;
@@ -151,26 +147,26 @@ namespace Kubility
 		
 		public virtual byte[] Serialize()
 		{
-			byte[] bys = new byte[14];
-			var bUid = BitConverter.GetBytes(Version);
-			var bFlag = BitConverter.GetBytes(Flag);
-			var bCMD = BitConverter.GetBytes(CMD);
-			var byLen = BitConverter.GetBytes(bodyLen);
+
+			NetByteBuffer by = new NetByteBuffer(14);
+			by += Version;
+			by += Flag;
+			by += CMD;
+			by += bodyLen;
+//			byte[] bys = new byte[14];
+//			var bUid = BitConverter.GetBytes(Version);
+//			var bFlag = BitConverter.GetBytes(Flag);
+//			var bCMD = BitConverter.GetBytes(CMD);
+//			var byLen = BitConverter.GetBytes(bodyLen);
+//			
+//			System.Array.Copy(bUid,0,bys,0,bUid.Length);
+//			System.Array.Copy(bFlag,0,bys,4,bFlag.Length);
+//			System.Array.Copy(bCMD,0,bys,6,bCMD.Length);
+//			System.Array.Copy(byLen,0,bys,10,byLen.Length);
 			
-			System.Array.Copy(bUid,0,bys,0,bUid.Length);
-			System.Array.Copy(bFlag,0,bys,4,bFlag.Length);
-			System.Array.Copy(bCMD,0,bys,6,bCMD.Length);
-			System.Array.Copy(byLen,0,bys,10,byLen.Length);
-			
-			return bys;
+			return by.ConverToBytes();
 		}
-		
-		public static MessageHead Create(byte[] bytes)
-		{
-			MessageHead head = new MessageHead();
-			head.Read(bytes);
-			return head;
-		}
+
 	}
 	
 	public enum BaseMessageErrorCode
@@ -233,7 +229,9 @@ namespace Kubility
 		
 		public static MessageHead ReadHead(byte[] bytes)
 		{
-			return MessageHead.Create(bytes);
+			MessageHead head = new MessageHead();
+			head.Read(bytes);
+			return head;
 		}
 		
 		

@@ -10,7 +10,7 @@ namespace Kubility
 		
 		public class QuequeTuple
 		{
-			MiniTuple<int,LinkedList<BaseMessage>> queue;
+			ClsTuple<int,LinkedList<BaseMessage>> queue;
 			
 			public int Size
 			{
@@ -25,14 +25,14 @@ namespace Kubility
 				Queue_Init(out queue);
 			}
 			
-			void Queue_Init(out MiniTuple<int,LinkedList<BaseMessage>> queue)
+			void Queue_Init(out ClsTuple<int,LinkedList<BaseMessage>> queue)
 			{
-				queue = new MiniTuple<int, LinkedList<BaseMessage>>();
+				queue = new ClsTuple<int, LinkedList<BaseMessage>>();
 				queue.field0 =0;
 				queue.field1 = new LinkedList<BaseMessage>();
 			}
 			
-			bool ComparePriority(MiniTuple<int,LinkedList<BaseMessage>> queue,int value)
+			bool ComparePriority(ClsTuple<int,LinkedList<BaseMessage>> queue,int value)
 			{
 				if(queue.field0 < value)
 				{
@@ -207,21 +207,24 @@ namespace Kubility
 		QuequeTuple ReceiveQueue ;
 		QuequeTuple BufferQueue ;
 		
-		LinkedList<MiniTuple<MessageHead,ByteBuffer>> m_SendBufferList ;
+		LinkedList<MessageHead> m_DataBufferList ;
 		
 		Dictionary<uint,Stack<object>> callbackDic ;
 
 		Action<BaseMessage> custom;
 
 		object mlock ;
+
+		ByteBuffer cache ;
 		
 		public MessageManager()
 		{
+			this.cache = new ByteBuffer(2048);
 			this.mlock = new object();
 			this.SendQueue = new QuequeTuple();
 			this.ReceiveQueue = new QuequeTuple();
 			this.BufferQueue = new QuequeTuple();
-			this.m_SendBufferList = new LinkedList<MiniTuple<MessageHead, ByteBuffer>>();
+			this.m_DataBufferList = new LinkedList<MessageHead>();
 			this.callbackDic = new Dictionary<uint, Stack<object>>();
 		}
 		
@@ -244,8 +247,11 @@ namespace Kubility
 		
 		public void PushToReceiveBuffer(byte[] data)
 		{
-			
-			CheckNewData(data);
+			lock(m_lock)
+			{
+				cache += data;
+			}
+			CheckNewData();
 			
 		}
 		
@@ -267,61 +273,80 @@ namespace Kubility
 		{
 			custom = ev;
 		}
-		
-		MiniTuple<MessageHead,ByteBuffer> TryGetTuple()
+
+
+		byte[] CacheRead(int begin =0,int len =-1)
 		{
-			if(m_SendBufferList.Count >0)
+			byte[] readdata ;
+			if(len < 0)
 			{
-				return m_SendBufferList.First.Value;
+				lock(m_lock)
+				{
+					readdata=cache.ConverToBytes();
+				}
 			}
 			else
 			{
-				var tuple =new MiniTuple<MessageHead,ByteBuffer>();
-				tuple.field1 = new ByteBuffer();
-				m_SendBufferList.AddLast(tuple);
-				return tuple;
+				lock(m_lock)
+				{
+					readdata=cache.Read(begin,len);
+				}
 			}
-		}
 
-
-		
-		void CheckNewData(byte[] data)
+			return readdata;
+        }
+        
+        void CheckNewData()
 		{
 			try
 			{
-				MiniTuple<MessageHead,ByteBuffer> tuple;
+				MessageHead head = null;
 				lock(mlock)
 				{
-					tuple = TryGetTuple();
+					if(m_DataBufferList.Count >0)
+					{
+						head = m_DataBufferList.First.Value;
+					}
 				}
 
-				//LogMgr.LogError("new data = "+ data.Length +" now ="+ tuple.field1.DataCount);
-				tuple.field1 += data;
-				if(tuple.field1.DataCount >= MessageHead.HeadLen)
+				if(cache.DataCount >= MessageHead.HeadLen )
 				{
-					if(tuple.field0 ==null)
-						tuple.field0 = BaseMessage.ReadHead(tuple.field1.ConverToBytes());
+	
+					int leftLen =cache.DataCount;
+					uint blen =0;
+					if(head == null)
+					{
+						head = BaseMessage.ReadHead(CacheRead());
+						lock(m_lock)
+						{
+							m_DataBufferList.AddLast(head);
+							cache.Clear(MessageHead.HeadLen);
+						}
+
+						leftLen = cache.DataCount;
+						blen= head.bodyLen;
+					}
 					else
-						tuple.field0.buffer += data;
-					
-					//left data
-					int leftLen = tuple.field0.buffer.DataCount;
-					UInt32 blen = tuple.field0.bodyLen;
-//					LogMgr.LogError("left  Len = "+leftLen +"  blen ="+ blen +" tuple1 = "+ tuple.field1.DataCount);
+					{
+						blen = head.bodyLen;
+					}
+
+//					LogMgr.LogError("left  Len = "+leftLen +"  blen ="+ blen );
 
 					if(leftLen >= blen)
 					{
 						BaseMessage message= null;
-						if(tuple.field0.Flag ==1)//json
+						if(head.Flag ==1)//json
 						{
-							message = JsonMessage.Create(tuple.field0.buffer.Read(0,(int)blen),tuple.field0);
+							message = JsonMessage.CreateAsNet(CacheRead(0,(int)blen),head);
 
 						}
-						else if(tuple.field0.Flag ==2)
+						else if(head.Flag ==2)
 						{
-							message =StructDataFactory.Create(tuple.field0.buffer,tuple.field0);
+							message =StructDataFactory.Create(CacheRead(0,(int)blen),head);
+
 						}
-						else if(tuple.field0.Flag ==0)
+						else if(head.Flag ==0)
 						{
 							LogMgr.LogError("Read Flag is 0 cant create");
 						}
@@ -334,19 +359,15 @@ namespace Kubility
 					
 						lock(mlock)
 						{
-							
-							m_SendBufferList.RemoveFirst();
+							m_DataBufferList.RemoveFirst();
 						}
 
-						//LogMgr.LogError("=====   left = "+ tuple.field0.buffer.DataCount );
+//						LogMgr.LogError("reduce size  = "+(leftLen -cache.DataCount) );
 						
-						if(leftLen > blen)
+						if(cache.DataCount >0)
 						{
-							CheckNewData(tuple.field0.buffer.ConverToBytes());
+							CheckNewData();
 						}
-						
-						
-						
 					}
 					
 				}

@@ -115,6 +115,9 @@ namespace Kubility
 					Marshal.StructureToPtr(structObj, buffer, true);
 					byte[] bytes = new byte[size];
 					Marshal.Copy(buffer, bytes, 0, size);
+
+					if(BitConverter.IsLittleEndian)
+						Array.Reverse(bytes);
 					return bytes;
 				}
 				finally
@@ -126,9 +129,16 @@ namespace Kubility
 				return null;
 			
 		}
-		
+		/// <summary>
+		/// Bytes is big enddian
+		/// </summary>
+		/// <returns>The to struct.</returns>
+		/// <param name="bytes">Bytes.</param>
+		/// <param name="strcutType">Strcut type.</param>
 		public static object BytesToStruct(byte[] bytes, Type strcutType)
 		{
+			if(BitConverter.IsLittleEndian)
+				Array.Reverse(bytes);
 			int size =  Marshal.SizeOf(strcutType);
 			IntPtr buffer = Marshal.AllocHGlobal(size);
 			try
@@ -142,18 +152,33 @@ namespace Kubility
 			}
 		}
 
+		/// <summary>
+		/// it will convert bytes
+		/// </summary>
+		/// <returns>The to struct.</returns>
+		/// <param name="Br">Br.</param>
+		/// <param name="strcutType">Strcut type.</param>
 		public static object BytesToStruct(ByteBuffer Br, Type strcutType)
 		{
 			byte[] bytes = Br.ConverToBytes();
+			if(BitConverter.IsLittleEndian)
+				Array.Reverse(bytes);
+
 			int size =  Marshal.SizeOf(strcutType);
-			IntPtr buffer = Marshal.AllocHGlobal(size);
+			IntPtr buffer = new IntPtr();
 			try
 			{
+				buffer = Marshal.AllocHGlobal(size);
 				Marshal.Copy(bytes, 0, buffer, size);
 				object obj;
 				Br.Clear(size);
 				obj  = Marshal.PtrToStructure(buffer, strcutType);
 				return obj;
+			}
+			catch(Exception ex)
+			{
+				LogMgr.LogError(ex);
+				return null;
 			}
 			finally
 			{
