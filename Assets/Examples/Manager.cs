@@ -49,8 +49,6 @@ public class Manager : MonoBehaviour
 		var v2 = (int)buffer;
 		var v3 = (string)buffer;
 
-
-		LogMgr.LogError("bitconvert "+ BitConverter.IsLittleEndian);
 		http = new HttpClient ();
 		KThread.StartTask (ThreadListener);
 

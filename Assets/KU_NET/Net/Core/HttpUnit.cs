@@ -30,11 +30,11 @@ namespace Kubility
 			DOWNLOADFILE_TOMEMORY,
         }
 
-        Stack<ClsTuple<string, HttpType, object>> requestList;
+        Stack<MiniTuple<string, HttpType, object>> requestList;
 
         KThread m_thread;
 
-        ClsTuple<string, HttpType, object> m_curRequest;
+		MiniTuple<string, HttpType, object> m_curRequest;
 
 #if USE_COR
 		Task m_task;
@@ -47,7 +47,7 @@ namespace Kubility
 
         public readonly bool Unity = false;
 
-        ClsTuple<string, int, object> file;
+		MiniTuple<string, int, object> file;
 
         StringBuilder m_requestSR;
         /// <summary>
@@ -157,12 +157,12 @@ namespace Kubility
         public HttpUnit()
         {
 
-            requestList = new Stack<ClsTuple<string, HttpType, object>>();
-            this.m_curRequest = new ClsTuple<string, HttpType, object>();
+			requestList = new Stack<MiniTuple<string, HttpType, object>>();
+			this.m_curRequest = new MiniTuple<string, HttpType, object>();
 #if USE_COR
 #else
 			this.m_lock = new object();
-            this.file = new ClsTuple<string, int, object>();
+			this.file = new MiniTuple<string, int, object>();
 
             this.file.field1 = Config.mIns.HttpSpeedLimit;
 
@@ -306,11 +306,11 @@ namespace Kubility
             {
 
 
-                var m_state = m_curRequest.field1;
+                HttpType m_state = m_curRequest.field1;
                 if (m_state == HttpType.GET || m_state == HttpType.POST)
                 {
 
-                    var value = new ClsTuple<string, System.Action<string>>();
+					MiniTuple<string, System.Action<string>> value = new MiniTuple<string, System.Action<string>>();
                     value.field0 = m_requestSR.ToString();
                     value.field1 = m_SuccessEvent;
                     m_curRequest.field2 = value;
@@ -344,18 +344,21 @@ namespace Kubility
 #else
         void HttpThread()
         {
-			ClsTuple<string, HttpType, object> curRequest = null;
+			MiniTuple<string, HttpType, object> curRequest = new MiniTuple<string, HttpType, object>();
+			bool isEmpty =false;
 			lock(m_lock)
 			{
 				if(requestList.Count >0)
 				{
 					curRequest  =requestList.Pop();
 				}
+				else
+					isEmpty =true;
 			}
-            if(curRequest == null)
+			if(isEmpty)
 				return;
 
-            ClsTuple<string, System.Action<string>> temp = (ClsTuple<string, System.Action<string>>)curRequest.field2;
+			MiniTuple<string, System.Action<string>> temp = (MiniTuple<string, System.Action<string>>)curRequest.field2;
             string strRequest = temp.field0;
             try
             {
@@ -409,107 +412,105 @@ namespace Kubility
 #else
         void ThreadDownLoad()
         {
-			ClsTuple<string, HttpType, object> curRequest = null;
+			MiniTuple<string, HttpType, object> curRequest = new MiniTuple<string, HttpType, object>();
 
+			bool isEmpty =false;
 			lock(m_lock)
 			{
 				if(requestList.Count >0)
 				{
 					curRequest  =requestList.Pop();
 				}
+				else
+					isEmpty =true;
 			}
-			if(curRequest == null)
+			if(isEmpty)
 				return;
-			LogMgr.LogError("enter");
 
 			HttpType curHttpType = curRequest.field1;
             //path,flag,limitspeed,ACTION
-            using (var req = (ClsTuple<string, int, object>)curRequest.field2)
-            {
-                try
-                {
-					Stream DataStream ;
-					long oldSize =0;
-					if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
+			var req = (MiniTuple<string, int, object>)curRequest.field2;
+			try
+			{
+				Stream DataStream ;
+				long oldSize =0;
+				if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
+				{
+					DataStream = new MemoryStream();
+				}
+				else if (curHttpType == HttpType.DOWNLOADFILE)
+				{
+					DataStream = new FileStream(req.field0, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+					oldSize= DataStream.Length;
+				}
+				else
+				{
+					LogMgr.LogError("Http Download State Error");
+					return;
+				}
+				
+				//req
+				
+				HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(curRequest.field0);
+				request.AddRange((int)oldSize);
+				request.Timeout = Config.mIns.Http_TimeOut;
+				
+				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+				Stream stream = response.GetResponseStream();
+				
+				if (response.Headers["Content-Range"] == null)
+				{
+					oldSize = 0;
+					
+				}
+				//long to float   may cause error
+				long totalSize = response.ContentLength + oldSize;
+				Action<byte[], float, bool> callback = (Action<byte[], float, bool>)req.field2;
+				
+				if(curHttpType == HttpType.DOWNLOADFILE)
+				{
+					if (DataStream != null && oldSize > 0)
 					{
-						DataStream = new MemoryStream();
+						DataStream.Seek(0, SeekOrigin.End);
 					}
-					else if (curHttpType == HttpType.DOWNLOADFILE)
-					{
-						DataStream = new FileStream(req.field0, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-						oldSize= DataStream.Length;
-					}
-					else
-					{
-						LogMgr.LogError("Http Download State Error");
-						return;
-					}
-
-					//req
-
-                    HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(curRequest.field0);
-                    request.AddRange((int)oldSize);
-                    request.Timeout = Config.mIns.Http_TimeOut;
-
-                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                    Stream stream = response.GetResponseStream();
-
-                    if (response.Headers["Content-Range"] == null)
-                    {
-                        oldSize = 0;
-
-                    }
-					//long to float   may cause error
-                    long totalSize = response.ContentLength + oldSize;
-					Action<byte[], float, bool> callback = (Action<byte[], float, bool>)req.field2;
-
-					if(curHttpType == HttpType.DOWNLOADFILE)
-					{
-						if (DataStream != null && oldSize > 0)
+					
+					Read(DataStream,stream,req,oldSize,totalSize,callback);
+				}
+				else if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
+				{
+					
+					Read(DataStream,stream,req,oldSize,totalSize,delegate(byte[] arg1, float arg2, bool arg3) {
+						if(!arg3)
 						{
-							DataStream.Seek(0, SeekOrigin.End);
+							callback(arg1,arg2,arg3);
 						}
-
-						Read(DataStream,stream,req,oldSize,totalSize,callback);
-					}
-					else if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
-					{
-
-						Read(DataStream,stream,req,oldSize,totalSize,delegate(byte[] arg1, float arg2, bool arg3) {
-							if(!arg3)
-							{
-								callback(arg1,arg2,arg3);
-							}
-							else
-							{
-								byte[] totalBys = new byte[DataStream.Length];
-								DataStream.Read(totalBys,0,totalBys.Length);
-								callback(totalBys,(float)totalBys.Length /(float)totalSize,arg3);
-							}
-						});
-
-					}
-
-                    response.Close();
-                    request.Abort();
-                    response.Close();
-                    stream.Close();
-					DataStream.Close();
-
-
-                }
-                catch (WebException ex)
-                {
-                    DealWithEx(ex);
-
-                }
-            }
-
-            //LogMgr.Log("DOWNLOADFILE ISDONE");
+						else
+						{
+							byte[] totalBys = new byte[DataStream.Length];
+							DataStream.Read(totalBys,0,totalBys.Length);
+							callback(totalBys,(float)totalBys.Length /(float)totalSize,arg3);
+						}
+					});
+					
+				}
+				
+				response.Close();
+				request.Abort();
+				response.Close();
+				stream.Close();
+				DataStream.Close();
+				
+				
+			}
+			catch (WebException ex)
+			{
+				DealWithEx(ex);
+				
+			}
 
         }
 
-		void Read(Stream DataIntStream,Stream DataOutStream,ClsTuple<string, int, object> req,long oldSize,long totalSize,Action<byte[], float, bool> callback)
+		void Read(Stream DataIntStream,Stream DataOutStream,MiniTuple<string, int, object> req,long oldSize,long totalSize,Action<byte[], float, bool> callback)
 		{
 			bool bvalue = false;
 			while (!bvalue)
@@ -529,7 +530,7 @@ namespace Kubility
 						{
 							DataIntStream.Write(bys, 0, readLen);
 						}
-					
+						bvalue = total == totalSize;
 						if (callback != null)
 						{
 							float value = (float)(oldSize + total) / (float)totalSize;
@@ -540,7 +541,7 @@ namespace Kubility
 						total += readLen;
 						maxLen = Math.Max(readLen, maxLen);
 					}
-					bvalue =true;
+//					bvalue =true;
 
 //					LogMgr.LogError("total =" + total.ToString() + " maxSpeed =" + maxLen.ToString());
 			
