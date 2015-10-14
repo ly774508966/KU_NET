@@ -9,7 +9,7 @@ namespace Kubility
 {
     public sealed class KThread : KObject
     {
-        Thread m_thread;
+       public Thread m_thread;
 
         ManualResetEvent restEv = new ManualResetEvent(false);
 
@@ -141,7 +141,8 @@ namespace Kubility
 
         public void ForceSuspend()
         {
-            if (m_thread != null && m_thread.ThreadState == ThreadState.Running)
+
+            if (m_thread != null && isRunning)
             {
                 OnPause();
                 m_thread.Suspend();
@@ -150,7 +151,8 @@ namespace Kubility
 
         public void ForceResume()
         {
-            if (m_thread != null && m_thread.ThreadState == ThreadState.Suspended)
+
+            if (m_thread != null && !isRunning)
             {
                 OnResume();
                 m_thread.Resume();
@@ -405,7 +407,7 @@ namespace Kubility
 
                     th.VoidEv += vev;
                     th.SEv = Check;
-
+					LogMgr.LogError("now th = "+ th.GetHashCode());
                     if (th.m_thread.ThreadState == ThreadState.Unstarted)
                     {
                         th.m_thread.Start();
