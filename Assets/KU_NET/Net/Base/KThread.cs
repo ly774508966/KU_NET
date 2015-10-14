@@ -1,4 +1,4 @@
-﻿#define SHOW_LOG
+﻿//#define SHOW_LOG
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -132,7 +132,7 @@ namespace Kubility
             }
             catch (Exception ex)
             {
-                LogMgr.LogError("ex  = " + ex.ToString());
+				LogMgr.LogError("ThreadEvents Error = " + ex.ToString());
             }
 
         }
@@ -344,12 +344,21 @@ namespace Kubility
                     if (WaitQueue.Count > 0)
                         callback(WaitQueue.First.Value);
                     else
-                        callback(null);
-                }
+					{
+						if (WaitQueue.Count + WorkQueue.Count <= Config.mIns.Thread_MaxSize)
+						{
+							var th = new KThread();
+							Push_ToWaitQueue(th);
+							
+							callback(WaitQueue.First.Value);
+						}
+					}
 
-
-                if (autoStart)
-                    StartTask(GetFirstTask());
+				}
+				
+				
+				if (autoStart)
+					StartTask(GetFirstTask());
             }
 
             public VoidDelegate GetFirstTask()
@@ -364,7 +373,7 @@ namespace Kubility
             {
                 if (_stop || vev == null)
                     return;
-                LogMgr.LogError("Count = " + TaskQueue.Count);
+
                 TaskQueue.RemoveFirst();
 
                 if (WaitQueue.Count > 0)

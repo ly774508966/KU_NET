@@ -55,6 +55,8 @@ namespace Kubility
         /// </summary>
         MiniTuple<short, int> m_varUtils;
 
+		object m_lock ;
+
 #endif
 
         #region interface
@@ -159,7 +161,7 @@ namespace Kubility
             this.m_curRequest = new ClsTuple<string, HttpType, object>();
 #if USE_COR
 #else
-
+			this.m_lock = new object();
             this.file = new ClsTuple<string, int, object>();
 
             this.file.field1 = Config.mIns.HttpSpeedLimit;
@@ -342,7 +344,17 @@ namespace Kubility
 #else
         void HttpThread()
         {
-            ClsTuple<string, HttpType, object> curRequest = requestList.Pop();
+			ClsTuple<string, HttpType, object> curRequest = null;
+			lock(m_lock)
+			{
+				if(requestList.Count >0)
+				{
+					curRequest  =requestList.Pop();
+				}
+			}
+            if(curRequest == null)
+				return;
+
             ClsTuple<string, System.Action<string>> temp = (ClsTuple<string, System.Action<string>>)curRequest.field2;
             string strRequest = temp.field0;
             try
@@ -397,9 +409,19 @@ namespace Kubility
 #else
         void ThreadDownLoad()
         {
-            var curRequest = requestList.Pop();
-			LogMgr.LogError("state  = "+ curRequest.field1);
-			return;
+			ClsTuple<string, HttpType, object> curRequest = null;
+
+			lock(m_lock)
+			{
+				if(requestList.Count >0)
+				{
+					curRequest  =requestList.Pop();
+				}
+			}
+			if(curRequest == null)
+				return;
+			LogMgr.LogError("enter");
+
 			HttpType curHttpType = curRequest.field1;
             //path,flag,limitspeed,ACTION
             using (var req = (ClsTuple<string, int, object>)curRequest.field2)
