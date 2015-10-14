@@ -77,7 +77,7 @@ namespace Kubility
 
 				LogMgr.LogError(cex.Message);
 
-				errorList.Push((cex.ErrorCode);
+				errorList.Push((int)cex.ErrorCode);
             }
             else
             {

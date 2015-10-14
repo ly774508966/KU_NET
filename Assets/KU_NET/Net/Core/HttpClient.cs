@@ -32,6 +32,11 @@ public class HttpClient : AbstractNetUnit
         m_http.BeginDownLoadFileFlushToFile(URL, Filepath, callback, AutoStart);
     }
 
+	public void BeginDownLoadFileFlushToMemory(string URL, Action<byte[], float, bool> callback, bool AutoStart = false)
+	{
+		m_http.BeginDownLoadFileFlushToMemory(URL,callback, AutoStart);
+	}
+
     public void BeginGet(string URL, Action<string> callback, bool AutoStart = true)
     {
         m_http.BeginGet(URL, delegate(string obj)

@@ -179,25 +179,27 @@ public class Manager : MonoBehaviour
 		if (GUILayout.Button ("start", GUILayout.Width (200))) {
 			http.BeginDownLoadFileFlushToFile ("http://118.192.69.207:8083/monster.apk",
 				Application.persistentDataPath + "/mons.apk",
-				delegate(byte[] arg1, float arg2, bool arg3) {
+			delegate(byte[] arg1, float arg2, bool arg3) 
+			{
 					value = arg2;
 					isDone = arg3;
-					LogMgr.Log ("Onprocess " + "  float  =" + arg2.ToString () + " isDone " + arg3.ToString ());
+				LogMgr.Log ("FlushToFile Onprocess " + "  float  =" + arg2.ToString () + " isDone " + arg3.ToString ());
 				});
+			
+			http.StartConnect ();
+
+			http.BeginDownLoadFileFlushToMemory ("http://118.192.69.207:8083/monster.apk",
+//			                                   Application.persistentDataPath + "/mons.apk",
+			delegate(byte[] arg1, float arg2, bool arg3)
+			{
+				value = arg2;
+				isDone = arg3;
+				LogMgr.Log ("FlushToMemory Onprocess " + "  float  =" + arg2.ToString () + " isDone " + arg3.ToString ());
+			});
 			
 			http.StartConnect ();
 		}
 
-		if (isDone) {
-			FileStream s = new FileStream (Application.persistentDataPath + "/test.txt", FileMode.OpenOrCreate, FileAccess.Read);
-			byte[] bs = new byte[1024];
-			s.Read (bs, 0, 200);
-
-
-			GUILayout.Label (Encoding.UTF8.GetString (bs));
-
-			s.Close ();
-		}
 	}
 
 

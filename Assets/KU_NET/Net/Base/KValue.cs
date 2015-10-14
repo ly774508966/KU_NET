@@ -145,7 +145,7 @@ namespace Kubility
 
 				public void Dispose()
 				{
-						LogMgr.LogError("disss");
+
 						free (field0);
 						free (field1);
 						GC.SuppressFinalize(this);
@@ -153,7 +153,7 @@ namespace Kubility
 
 				void free(object obj)
 				{
-						if (obj.GetType () == typeof(Stream))
+						if ( obj != null && obj.GetType () == typeof(Stream))
 						{
 								((Stream)obj).Close ();
 						}
@@ -188,7 +188,7 @@ namespace Kubility
 
 				void free(object obj)
 				{
-						if (obj.GetType () == typeof(Stream))
+						if ( obj != null && obj.GetType () == typeof(Stream))
 						{
 								((Stream)obj).Close ();
 						}
@@ -225,7 +225,7 @@ namespace Kubility
 
 				void free(object obj)
 				{
-						if (obj.GetType () == typeof(Stream))
+						if ( obj != null && obj.GetType () == typeof(Stream))
 						{
 								((Stream)obj).Close ();
 						}
@@ -265,7 +265,7 @@ namespace Kubility
 
 				void free(object obj)
 				{
-						if (obj.GetType () == typeof(Stream))
+						if ( obj != null && obj.GetType () == typeof(Stream))
 						{
 								((Stream)obj).Close ();
 						}

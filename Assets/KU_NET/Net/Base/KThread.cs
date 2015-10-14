@@ -1,4 +1,4 @@
-﻿//#define SHOW_LOG
+﻿#define SHOW_LOG
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -335,6 +335,7 @@ namespace Kubility
 						{
 								if (_stop || vev == null)
 										return;
+								LogMgr.LogError("Count = "+ TaskQueue.Count);
 								TaskQueue.RemoveFirst ();
 				
 								if (WaitQueue.Count > 0) {
@@ -356,22 +357,22 @@ namespace Kubility
 												WorkQueue.AddLast (th);
 												WaitQueue.Remove (th);
 										}
-					
+
 					
 										th.VoidEv = null;
 										th.SEv = null;
 					
 										th.VoidEv += vev;
 										th.SEv = Check;
-					
-					
+
 										if (th.m_thread.ThreadState == ThreadState.Unstarted) {
 												th.m_thread.Start ();
 										} else if (th.m_thread.ThreadState == ThreadState.WaitSleepJoin) {
 												th.WeakResume ();
 										}
 					
-								} else {
+								} 
+								else {
 										if (WaitQueue.Count + WorkQueue.Count <= Config.mIns.Thread_MaxSize) {
 												var th = new KThread ();
 												Push_ToWaitQueue (th);

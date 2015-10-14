@@ -27,6 +27,7 @@ namespace Kubility
             POST,
             GET,
             DOWNLOADFILE,
+			DOWNLOADFILE_TOMEMORY,
         }
 
         Stack<ClsTuple<string, HttpType, object>> requestList;
@@ -206,6 +207,25 @@ namespace Kubility
 
         }
 
+		public void BeginDownLoadFileFlushToMemory(string URL,  Action<byte[], float, bool> callback, bool AutoStart = false)
+		{
+			m_curRequest.field0 = URL;
+			m_curRequest.field1 = HttpType.DOWNLOADFILE_TOMEMORY;
+#if USE_COR
+			
+			m_task = new Task (UnityConnect (callback), AutoStart);
+#else
+			
+			this.onProcess = callback;
+
+			m_curRequest.field2 = file;
+			
+			m_thread = KThread.StartTask(ThreadDownLoad, false);
+			
+			#endif
+			
+		}
+
 
         public void BeginDownLoadFileFlushToFile(string URL, string Filepath, Action<byte[], float, bool> callback, bool AutoStart = false)
         {
@@ -298,7 +318,7 @@ namespace Kubility
 
                     m_thread.Start();
                 }
-                else if (m_state == HttpType.DOWNLOADFILE)
+                else if (m_state == HttpType.DOWNLOADFILE || m_state == HttpType.DOWNLOADFILE_TOMEMORY)
                 {
                     file.field2 = onProcess;
                     m_curRequest.field2 = file;
@@ -309,7 +329,10 @@ namespace Kubility
             }
             catch (Exception ex)
             {
-                LogMgr.LogError(ex);
+				if(m_OthersErrorEvent != null)
+				{
+					m_OthersErrorEvent(ex);
+				}
             }
 
 #endif
@@ -375,14 +398,33 @@ namespace Kubility
         void ThreadDownLoad()
         {
             var curRequest = requestList.Pop();
+			LogMgr.LogError("state  = "+ curRequest.field1);
+			return;
+			HttpType curHttpType = curRequest.field1;
             //path,flag,limitspeed,ACTION
             using (var req = (ClsTuple<string, int, object>)curRequest.field2)
             {
                 try
                 {
-                    var fsstream = new FileStream(req.field0, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                    long oldSize = fsstream.Length;
-                    Action<byte[], float, bool> callback = (Action<byte[], float, bool>)req.field2;
+					Stream DataStream ;
+					long oldSize =0;
+					if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
+					{
+						DataStream = new MemoryStream();
+					}
+					else if (curHttpType == HttpType.DOWNLOADFILE)
+					{
+						DataStream = new FileStream(req.field0, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+						oldSize= DataStream.Length;
+					}
+					else
+					{
+						LogMgr.LogError("Http Download State Error");
+						return;
+					}
+
+					//req
+
                     HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(curRequest.field0);
                     request.AddRange((int)oldSize);
                     request.Timeout = Config.mIns.Http_TimeOut;
@@ -390,84 +432,47 @@ namespace Kubility
                     HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                     Stream stream = response.GetResponseStream();
 
-
-                    //如果返回的response头中Content-Range值为空，说明服务器不支持Range属性，不支持断点续传,返回的是所有数据
                     if (response.Headers["Content-Range"] == null)
                     {
                         oldSize = 0;
 
                     }
+					//long to float   may cause error
                     long totalSize = response.ContentLength + oldSize;
-                    bool bvalue = false;
+					Action<byte[], float, bool> callback = (Action<byte[], float, bool>)req.field2;
 
-                    while (!bvalue)
-                    {
-                        if (fsstream != null && oldSize > 0)
-                        {
-                            fsstream.Seek(0, SeekOrigin.End);
-                        }
+					if(curHttpType == HttpType.DOWNLOADFILE)
+					{
+						if (DataStream != null && oldSize > 0)
+						{
+							DataStream.Seek(0, SeekOrigin.End);
+						}
 
+						Read(DataStream,stream,req,oldSize,totalSize,callback);
+					}
+					else if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
+					{
 
-                        if (response != null)
-                        {
+						Read(DataStream,stream,req,oldSize,totalSize,delegate(byte[] arg1, float arg2, bool arg3) {
+							if(!arg3)
+							{
+								callback(arg1,arg2,arg3);
+							}
+							else
+							{
+								byte[] totalBys = new byte[DataStream.Length];
+								DataStream.Read(totalBys,0,totalBys.Length);
+								callback(totalBys,(float)totalBys.Length /(float)totalSize,arg3);
+							}
+						});
 
-                            try
-                            {
-                                BufferedStream bs = new BufferedStream(stream);
-                                byte[] bys = new byte[req.field1];
-                                int readLen = bs.Read(bys, 0, bys.Length);
-                                int maxLen = readLen;
-                                int total = readLen;
-                                while (readLen > 0)
-                                {
-
-                                    if (fsstream != null)
-                                    {
-                                        fsstream.Write(bys, 0, readLen);
-                                    }
-                                    bvalue = total == response.ContentLength;
-
-                                    if (callback != null)
-                                    {
-
-                                        float value = (float)(oldSize + total) / (float)totalSize;
-                                        callback(bys, value, bvalue);
-                                    }
-
-                                    readLen = bs.Read(bys, 0, bys.Length);
-
-                                    total += readLen;
-                                    maxLen = Math.Max(readLen, maxLen);
-                                }
-
-                                LogMgr.LogError("total =" + total.ToString() + " maxSpeed =" + maxLen.ToString());
-
-
-                            }
-                            catch (Exception ex)
-                            {
-                                if (m_OthersErrorEvent != null)
-                                {
-                                    m_OthersErrorEvent(ex);
-                                }
-
-                            }
-                        }
-                        else
-                        {
-                            if (m_OthersErrorEvent != null)
-                            {
-                                m_OthersErrorEvent(new CustomException("reponse is Null ", ErrorType.ConnectFailed));
-                            }
-                            break;
-                        }
-                    }
+					}
 
                     response.Close();
                     request.Abort();
                     response.Close();
                     stream.Close();
-                    fsstream.Close();
+					DataStream.Close();
 
 
                 }
@@ -481,6 +486,58 @@ namespace Kubility
             //LogMgr.Log("DOWNLOADFILE ISDONE");
 
         }
+
+		void Read(Stream DataIntStream,Stream DataOutStream,ClsTuple<string, int, object> req,long oldSize,long totalSize,Action<byte[], float, bool> callback)
+		{
+			bool bvalue = false;
+			while (!bvalue)
+			{
+
+				try
+				{
+
+					byte[] bys = new byte[req.field1];
+					int readLen = DataOutStream.Read(bys, 0, bys.Length);
+					int maxLen = readLen;
+					int total = readLen;
+					while (readLen > 0  )
+					{
+						
+						if (DataIntStream != null)
+						{
+							DataIntStream.Write(bys, 0, readLen);
+						}
+					
+						if (callback != null)
+						{
+							float value = (float)(oldSize + total) / (float)totalSize;
+							callback(bys, value, bvalue);
+						}
+						readLen = DataOutStream.Read(bys, 0, bys.Length);
+						
+						total += readLen;
+						maxLen = Math.Max(readLen, maxLen);
+					}
+					bvalue =true;
+
+//					LogMgr.LogError("total =" + total.ToString() + " maxSpeed =" + maxLen.ToString());
+			
+				}
+				catch (Exception ex)
+				{
+					if (m_OthersErrorEvent != null)
+					{
+						m_OthersErrorEvent(ex);
+					}
+					if (callback != null)
+					{
+						callback(null, 0, true);
+					}
+				}
+
+			}
+
+		}
 
 #endif
         public void AddField(string field, string content)
