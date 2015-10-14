@@ -21,6 +21,14 @@ namespace Kubility
     {
         Stack<int> errorList = new Stack<int>();
 
+		public bool HasError
+		{
+			get
+			{
+				return errorList.Count>0;
+			}
+		}
+
         #region connectevents
 
         public void Register<T>(T obj) where T : ConnectEvents
@@ -50,7 +58,7 @@ namespace Kubility
         {
             if (ex.GetType() == typeof(NullReferenceException))
             {
-                LogMgr.LogError("Null Error");
+                LogMgr.LogError("Null Ref Error");
                 errorList.Push((int)ErrorType.NullRef);
             }
             else if (ex.GetType() == typeof(ArgumentException)) //
@@ -65,7 +73,11 @@ namespace Kubility
             }
             else if (ex.GetType() == typeof(CustomException))
             {
-                LogMgr.LogError("自定义异常");
+				CustomException cex = ex as CustomException;
+
+				LogMgr.LogError(cex.Message);
+
+				errorList.Push((cex.ErrorCode);
             }
             else
             {
@@ -73,7 +85,6 @@ namespace Kubility
             }
         }
         #endregion
-
 
         public ErrorType PopError()
         {

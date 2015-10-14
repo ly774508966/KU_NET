@@ -1,4 +1,4 @@
-﻿#define USE_COR
+﻿//#define USE_COR
 
 using UnityEngine;
 using System;
@@ -258,7 +258,7 @@ namespace Kubility
 			{
 				if(m_OthersErrorEvent != null)
 				{
-					m_OthersErrorEvent(new CustomException("www error",ErrorType.NetError));
+					m_OthersErrorEvent(new CustomException(www.error,ErrorType.NetError));
 				}
 			}
 			m_state = HttpType.FREE;
