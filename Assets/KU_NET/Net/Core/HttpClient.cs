@@ -72,7 +72,9 @@ public class HttpClient : AbstractNetUnit
     {
         m_http.AddField(field, content);
     }
-
+	/// <summary>
+	/// Pause the lastest thread
+	/// </summary>
     public void Pause()
     {
         KThread th = curThread;
@@ -90,7 +92,9 @@ public class HttpClient : AbstractNetUnit
     {
         m_http.PopRequest();
     }
-
+	/// <summary>
+	/// Resume the lastest thread
+	/// </summary>
     public void Resume()
     {
         KThread th = curThread;

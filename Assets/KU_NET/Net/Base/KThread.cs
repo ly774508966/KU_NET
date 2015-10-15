@@ -9,7 +9,9 @@ namespace Kubility
 {
     public sealed class KThread : KObject
     {
-       public Thread m_thread;
+       	Thread m_thread;
+
+		public static bool RaiseAbortException = false;
 
         ManualResetEvent restEv = new ManualResetEvent(false);
 
@@ -130,9 +132,17 @@ namespace Kubility
 
                 OnDestroy();
             }
+			catch (ThreadAbortException abortEx)
+			{
+				if(RaiseAbortException)
+				{
+					LogMgr.LogError("ThreadAbortException Error = " + abortEx.ToString());
+				}
+			}
             catch (Exception ex)
             {
 				LogMgr.LogError("ThreadEvents Error = " + ex.ToString());
+
             }
 
         }
@@ -214,7 +224,8 @@ namespace Kubility
         {
             if (m_thread != null)
             {
-                ForceSuspend();
+				VoidEv = null;
+				SEv =  null;
                 m_thread.Abort();
                 OnDestroy();
             }
@@ -294,7 +305,9 @@ namespace Kubility
                 while (enumerator.MoveNext())
                 {
                     KThread sub = (KThread)enumerator.Current;
-                    sub.WillKill();
+//                  	sub.WillKill();
+					//使用强制关闭
+					sub.Abort();
 
                 }
 
@@ -304,8 +317,9 @@ namespace Kubility
                 while (wenumerator.MoveNext())
                 {
                     KThread sub = (KThread)wenumerator.Current;
-                    sub.WillKill();
-
+//                    sub.WillKill();
+					//使用强制关闭
+					sub.Abort();
                 }
                 WaitQueue.Clear();
 

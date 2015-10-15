@@ -29,7 +29,7 @@ namespace Kubility
             {
                 return _StructData;
             }
-            protected set
+            private set
             {
                 _StructData = value;
             }
