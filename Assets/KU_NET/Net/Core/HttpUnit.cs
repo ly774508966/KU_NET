@@ -501,7 +501,7 @@ namespace Kubility
 							DataStream.Seek(0, SeekOrigin.End);
 						}
 						
-						Read(DataStream,stream,req,oldSize,response.ContentLength,callback);
+                        Read(DataStream,stream,req,oldSize,response.ContentLength,callback);
 					}
 					else if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
 					{
@@ -536,6 +536,7 @@ namespace Kubility
 			}
 			finally
 			{
+
 				if(request != null)
 				{
 					request.Abort();
@@ -578,7 +579,7 @@ namespace Kubility
 						bvalue = total == totalSize;
 						if (callback != null)
 						{
-							float value = (float)(oldSize + total) / (float)totalSize;
+							float value = (float)(oldSize + total) / (float)(totalSize+ oldSize);
 							callback(bys, value, bvalue);
 						}
 						readLen = DataOutStream.Read(bys, 0, bys.Length);
