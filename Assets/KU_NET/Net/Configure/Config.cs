@@ -6,7 +6,7 @@ namespace Kubility
     public class Config : MonoSingleTon<Config>
     {
 
-        public int HttpSpeedLimit = 102400;
+        public int HttpSpeedLimit = 10240;
         public int Http_TimeOut = 2000;
 
         #region Message

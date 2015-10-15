@@ -446,12 +446,15 @@ namespace Kubility
 			if(isEmpty)
 				return;
 
+			HttpWebRequest request = null;
+			HttpWebResponse response = null;
 			HttpType curHttpType = curRequest.field1;
             //path,flag,limitspeed,ACTION
 			var req = (MiniTuple<string, int, object>)curRequest.field2;
+			Stream DataStream = null ;
 			try
 			{
-				Stream DataStream ;
+
 				long oldSize =0;
 				if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
 				{
@@ -467,57 +470,62 @@ namespace Kubility
 					LogMgr.LogError("Http Download State Error");
 					return;
 				}
-				
+
+				Action<byte[], float, bool> callback = (Action<byte[], float, bool>)req.field2;
 				//req
 				
-				HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(curRequest.field0);
-				request.AddRange((int)oldSize);
+				request= (HttpWebRequest)HttpWebRequest.Create(curRequest.field0);
+				request.AddRange("bytes",(int)oldSize);
 				request.Timeout = Config.mIns.Http_TimeOut;
-				
-				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-				Stream stream = response.GetResponseStream();
-				
+				request.ReadWriteTimeout = 20 * 1000;
+				request.KeepAlive = false;
+				request.AllowWriteStreamBuffering = false;
+				request.AllowAutoRedirect = true;
+				request.AutomaticDecompression = DecompressionMethods.None;
+                
+                response = (HttpWebResponse)request.GetResponse();
+
 				if (response.Headers["Content-Range"] == null)
 				{
 					oldSize = 0;
-					
 				}
 				//long to float   may cause error
 				long totalSize = response.ContentLength + oldSize;
-				Action<byte[], float, bool> callback = (Action<byte[], float, bool>)req.field2;
-				
-				if(curHttpType == HttpType.DOWNLOADFILE)
+
+				using ( Stream stream = response.GetResponseStream())
 				{
-					if (DataStream != null && oldSize > 0)
+					if(curHttpType == HttpType.DOWNLOADFILE)
 					{
-						DataStream.Seek(0, SeekOrigin.End);
+						if (DataStream != null && oldSize > 0)
+						{
+							DataStream.Seek(0, SeekOrigin.End);
+						}
+						
+						Read(DataStream,stream,req,oldSize,response.ContentLength,callback);
 					}
-					
-					Read(DataStream,stream,req,oldSize,totalSize,callback);
+					else if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
+					{
+						
+						Read(DataStream,stream,req,oldSize,response.ContentLength,delegate(byte[] arg1, float arg2, bool arg3) {
+							if(!arg3)
+							{
+								callback(arg1,arg2,arg3);
+							}
+							else
+							{
+								byte[] totalBys = new byte[DataStream.Length];
+								DataStream.Read(totalBys,0,totalBys.Length);
+								callback(totalBys,(float)totalBys.Length /(float)totalSize,arg3);
+							}
+						});
+						
+					}
 				}
-				else if(curHttpType == HttpType.DOWNLOADFILE_TOMEMORY)
-				{
-					
-					Read(DataStream,stream,req,oldSize,totalSize,delegate(byte[] arg1, float arg2, bool arg3) {
-						if(!arg3)
-						{
-							callback(arg1,arg2,arg3);
-						}
-						else
-						{
-							byte[] totalBys = new byte[DataStream.Length];
-							DataStream.Read(totalBys,0,totalBys.Length);
-							callback(totalBys,(float)totalBys.Length /(float)totalSize,arg3);
-						}
-					});
-					
-				}
-				
-				response.Close();
-				request.Abort();
-				response.Close();
-				stream.Close();
-				DataStream.Close();
+
+				if(DataStream != null)
+					DataStream.Close();
+
+				System.GC.Collect();
 				
 				
 			}
@@ -526,25 +534,43 @@ namespace Kubility
 				DealWithEx(ex);
 				
 			}
+			finally
+			{
+				if(request != null)
+				{
+					request.Abort();
+				}
+
+				if(response != null)
+				{
+					response.Close();
+				}
+
+				if(DataStream != null)
+				{
+					DataStream.Close();
+				}
+
+				System.GC.Collect();
+			}
 
         }
 
 		void Read(Stream DataIntStream,Stream DataOutStream,MiniTuple<string, int, object> req,long oldSize,long totalSize,Action<byte[], float, bool> callback)
 		{
 			bool bvalue = false;
-			while (!bvalue)
+			try
 			{
-
-				try
+                
+	            while (!bvalue)
 				{
-
 					byte[] bys = new byte[req.field1];
 					int readLen = DataOutStream.Read(bys, 0, bys.Length);
 					int maxLen = readLen;
 					int total = readLen;
 					while (readLen > 0  )
 					{
-						
+							
 						if (DataIntStream != null)
 						{
 							DataIntStream.Write(bys, 0, readLen);
@@ -556,29 +582,30 @@ namespace Kubility
 							callback(bys, value, bvalue);
 						}
 						readLen = DataOutStream.Read(bys, 0, bys.Length);
-						
+							
 						total += readLen;
-						maxLen = Math.Max(readLen, maxLen);
-					}
-			
-				}
-				catch (Exception ex)
-				{
-					if (m_OthersErrorEvent != null)
-					{
-						m_OthersErrorEvent(ex);
-					}
-					if (callback != null)
-					{
-						callback(null, 0, true);
-					}
-				}
 
+                        maxLen = Math.Max(readLen, maxLen);
+					}
+	
+				}
 			}
 
-		}
-
-#endif
+			catch (Exception ex)
+			{
+				if (m_OthersErrorEvent != null)
+				{
+					m_OthersErrorEvent(ex);
+				}
+				if (callback != null)
+                {
+                    callback(null, 0, true);
+                }
+            }
+            
+        }
+        
+        #endif
         public void AddField(string field, string content)
         {
 #if USE_COR
