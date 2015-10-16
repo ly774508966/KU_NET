@@ -10,11 +10,6 @@ namespace Kubility
 
     public class StructMessageHead : MessageHead
     {
-        public StructMessageHead()
-        {
-            this.Flag = 2;
-        }
-
     }
 
 
@@ -37,6 +32,11 @@ namespace Kubility
 
         public static StructMessage Create(MessageHead head, ValueType data)
         {
+			if(MessageInfo.MessageType != MessageDataType.Struct)
+			{
+				LogMgr.LogError("cant use Struct message  because your MessageType is "+ MessageInfo.MessageType);
+				return null;
+			}
             StructMessage message = new StructMessage();
             message.head = head;
             message._StructData = data;
@@ -45,7 +45,11 @@ namespace Kubility
 
         public override void Wait_Deserialize<T>(Action<T> ev)
         {
-
+			if(MessageInfo.MessageType != MessageDataType.Struct)
+			{
+				LogMgr.LogError("cant use Struct message  because your MessageType is "+ MessageInfo.MessageType);
+				return;
+			}
             MessageManager.mIns.PushToWaitQueue(this, delegate(ValueType value)
             {
                 T data = (T)Convert.ChangeType(value, typeof(T));
@@ -56,6 +60,11 @@ namespace Kubility
 
         public override byte[] Serialize(bool addHead = true)
         {
+			if(MessageInfo.MessageType != MessageDataType.Struct)
+			{
+				LogMgr.LogError("cant use Struct message  because your MessageType is "+ MessageInfo.MessageType);
+				return null;
+			}
             ByteBuffer buffer = new ByteBuffer(512);
             if (head != null && addHead)
             {

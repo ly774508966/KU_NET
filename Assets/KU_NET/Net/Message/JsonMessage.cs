@@ -8,14 +8,8 @@ namespace Kubility
 {
     public class JsonMessageHead : MessageHead
     {
-        public JsonMessageHead()
-        {
-            this.Flag = 1;
-        }
 
     }
-
-
 
     public sealed class JsonMessage : BaseMessage
     {
@@ -36,6 +30,12 @@ namespace Kubility
         /// <typeparam name="T">The 1st type parameter.</typeparam>
         public static JsonMessage Create<T>(T data, JsonMessageHead jhead = null)
         {
+
+			if(MessageInfo.MessageType != MessageDataType.Json)
+			{
+				LogMgr.LogError("cant use Json message  because your MessageType is "+ MessageInfo.MessageType);
+				return null;
+			}
             JsonMessage message = new JsonMessage();
             message.messageType = KMessageType.None;
             message.DataBody.m_FirstValue = ParseUtils.Json_Serialize(data);
@@ -50,6 +50,11 @@ namespace Kubility
 
         public static JsonMessage CreateAsNet(byte[] buffer, MessageHead jhead = null)
         {
+			if(MessageInfo.MessageType != MessageDataType.Json)
+			{
+				LogMgr.LogError("cant use Json message  because your MessageType is "+ MessageInfo.MessageType);
+				return null;
+			}
             JsonMessage message = new JsonMessage();
             message.messageType = KMessageType.None;
             if (BitConverter.IsLittleEndian)
@@ -72,6 +77,11 @@ namespace Kubility
         /// <typeparam name="T">The 1st type parameter.</typeparam>
         public override void Wait_Deserialize<T>(Action<T> ev)
         {
+			if(MessageInfo.MessageType != MessageDataType.Json)
+			{
+				LogMgr.LogError("cant use Json message  because your MessageType is "+ MessageInfo.MessageType);
+				return ;
+			}
 
             MessageManager.mIns.PushToWaitQueue(this, delegate(string value)
             {
@@ -90,6 +100,11 @@ namespace Kubility
 
         public override byte[] Serialize(bool addHead = true)
         {
+			if(MessageInfo.MessageType != MessageDataType.Json)
+			{
+				LogMgr.LogError("cant use Json message  because your MessageType is "+ MessageInfo.MessageType);
+				return null;
+			}
             ByteBuffer buffer = new ByteBuffer(1024);
 
             var bys = System.Text.Encoding.UTF8.GetBytes(DataBody.m_FirstValue);

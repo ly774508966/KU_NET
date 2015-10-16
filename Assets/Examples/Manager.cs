@@ -34,12 +34,11 @@ public class Manager : MonoBehaviour
 	bool isDone = false;
 	float value = 0;
 	HttpClient http;
+
 	
 	// Use this for initialization
 	void Start ()
 	{
-
-
 		var buffer = new NetByteBuffer (1024);
 		buffer += 1.452f;
 		buffer += (uint)12;
@@ -54,108 +53,11 @@ public class Manager : MonoBehaviour
 
 		client = new KTcpClient ();
 		client.Init ("127.0.0.1", 11000);
-		HeartBeatStructData mess;
-		mess.boolValue = true;
-		mess.charValue = 2;
-		mess.doubleValue = 2.3;
-		mess.floatValue = 1.5f;
-		mess.info = "i'm fine @ ~~~ 你好";
-		mess.msgID = 102;
-
-
-
-		var head = new StructMessageHead ();
-		head.CMD = 102;
-
-		head.bodyLen = (UInt32)Marshal.SizeOf (mess);
-		
-		var message = StructMessage.Create (head, mess);
-
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-		client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-			LogMgr.LogError ("callback");
-//			KTool.Dump (obj);
-		});
-
-
-		var test = new Test ();
-		test.val.Add (123);
-		test.val.Add (246);
-		test.val.Add (45);
-		var Jsonhead = new JsonMessageHead ();
-		var jsonMessage = JsonMessage.Create<Test> (test, Jsonhead);
-
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-			KTool.Dump (obj);
-
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-		client.Send<Test> (jsonMessage, delegate(Test obj) {
-			LogMgr.LogError ("json");
-//			KTool.Dump (obj);
-		});
-
 	}
 
 
 	void ThreadListener ()
 	{
-
 		AsynchronousSocketListener.StartListening ();
 	}
 
@@ -188,6 +90,7 @@ public class Manager : MonoBehaviour
 
 		if (GUILayout.Button ("Send Struct Message ", GUILayout.Width (200)))
 		{
+			MessageInfo.MessageType = MessageDataType.Struct;
 			HeartBeatStructData mess;
 			mess.boolValue = true;
 			mess.charValue = 2;
@@ -202,13 +105,14 @@ public class Manager : MonoBehaviour
 			var message = StructMessage.Create (head, mess);
 
 			client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
-				LogMgr.LogError ("Struct Message Callback");
+				LogMgr.Log ("Struct Message Callback");
 				KTool.Dump (obj);
 			});
 		}
 
 		if (GUILayout.Button ("Send Json Message ", GUILayout.Width (200)))
 		{
+			MessageInfo.MessageType = MessageDataType.Json;
 			var test = new Test ();
 			test.val.Add (123);
 			test.val.Add (246);
@@ -216,7 +120,7 @@ public class Manager : MonoBehaviour
 			var Jsonhead = new JsonMessageHead ();
 			var jsonMessage = JsonMessage.Create<Test> (test, Jsonhead);
 			client.Send<Test> (jsonMessage, delegate(Test obj) {
-				LogMgr.LogError ("Json Message Callback");
+				LogMgr.Log ("Json Message Callback");
 				KTool.Dump (obj);
 				
 			});

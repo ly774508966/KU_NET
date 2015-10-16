@@ -454,7 +454,7 @@ namespace Kubility
 
             try
             {
-				LogMgr.Log("cur Connected = "+m_socket.Connected );
+//				LogMgr.Log("cur Connected = "+m_socket.Connected );
 				if (times > Config.mIns.Retry_Times)
 				{
 					LogMgr.LogError("Reconnect Failed " );

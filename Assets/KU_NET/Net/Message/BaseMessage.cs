@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#define STRUCT
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -15,12 +16,25 @@ namespace Kubility
         KHeart_Beat,
     }
 
+	public enum MessageDataType
+	{
+		Struct,
+		Json,
+		ProtoBuf,
+	}
+
     public class MessageHead
     {
+#if STRUCT
 
+#elif JSON
+		public const  MessageDataType MessageType = MessageDataType.Json;
+#else
+		public const  MessageDataType MessageType = MessageDataType.ProtoBuf;
+#endif
         protected NetByteBuffer _buffer;
 
-        public const int HeadLen = 14;
+        
 
         /// <summary>
         /// unique ID
@@ -30,10 +44,8 @@ namespace Kubility
         protected MiniTuple<UInt32, int> _CMD;
 
         protected MiniTuple<UInt32, int> _bodyLen;
-        /// <summary>
-        /// 0:default  1:json  2:struct
-        /// </summary>
-        protected MiniTuple<short, int> _Flag;
+
+//        protected MiniTuple<short, int> _Flag;
 
         public UInt32 bodyLen
         {
@@ -74,18 +86,18 @@ namespace Kubility
             }
         }
 
-        public short Flag
-        {
-            get
-            {
-                return _Flag.field0;
-            }
-
-            protected set
-            {
-                _Flag.field0 = value;
-            }
-        }
+//        public short Flag
+//        {
+//            get
+//            {
+//                return _Flag.field0;
+//            }
+//
+//            protected set
+//            {
+//                _Flag.field0 = value;
+//            }
+//        }
 
         public NetByteBuffer buffer
         {
@@ -116,9 +128,9 @@ namespace Kubility
             this._CMD.field0 = 0;
             this._CMD.field1 = 0;
 
-            this._Flag = new MiniTuple<short, int>();
-            this._Flag.field0 = 0;
-            this._Flag.field1 = 0;
+//            this._Flag = new MiniTuple<short, int>();
+//            this._Flag.field0 = 0;
+//            this._Flag.field1 = 0;
 
             this._Version = new MiniTuple<uint, int>();
             this._Version.field0 = 0;
@@ -130,7 +142,7 @@ namespace Kubility
         public virtual void Read(Stream buffer)
         {
             this._Version.field1 = ByteStream.readUInt32(buffer, out this._Version.field0);
-            this._Flag.field1 = ByteStream.readShort16(buffer, out this._Flag.field0);
+//            this._Flag.field1 = ByteStream.readShort16(buffer, out this._Flag.field0);
             this._CMD.field1 = ByteStream.readUInt32(buffer, out this._CMD.field0);
             this._bodyLen.field1 = ByteStream.readUInt32(buffer, out this._bodyLen.field0);
 
@@ -140,7 +152,7 @@ namespace Kubility
         {
             buffer = new NetByteBuffer(bytes);
             Version = (UInt32)buffer;
-            Flag = (short)buffer;
+//            Flag = (short)buffer;
             CMD = (UInt32)buffer;
             bodyLen = (UInt32)buffer;
         }
@@ -148,35 +160,16 @@ namespace Kubility
         public virtual byte[] Serialize()
         {
 
-            NetByteBuffer by = new NetByteBuffer(14);
+            NetByteBuffer by = new NetByteBuffer(MessageInfo.HeadLen);
             by += Version;
-            by += Flag;
+//            by += Flag;
             by += CMD;
             by += bodyLen;
-            //			byte[] bys = new byte[14];
-            //			var bUid = BitConverter.GetBytes(Version);
-            //			var bFlag = BitConverter.GetBytes(Flag);
-            //			var bCMD = BitConverter.GetBytes(CMD);
-            //			var byLen = BitConverter.GetBytes(bodyLen);
-            //			
-            //			System.Array.Copy(bUid,0,bys,0,bUid.Length);
-            //			System.Array.Copy(bFlag,0,bys,4,bFlag.Length);
-            //			System.Array.Copy(bCMD,0,bys,6,bCMD.Length);
-            //			System.Array.Copy(byLen,0,bys,10,byLen.Length);
 
             return by.ConverToBytes();
         }
 
     }
-
-    public enum BaseMessageErrorCode
-    {
-        Success,
-        HeadLess,
-        BodyOver,
-        BodyLess,
-    }
-
 
 
     public class BaseMessage

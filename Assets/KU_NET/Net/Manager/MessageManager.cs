@@ -309,7 +309,7 @@ namespace Kubility
                     }
                 }
 
-                if (cache.DataCount >= MessageHead.HeadLen)
+				if (cache.DataCount >= MessageInfo.HeadLen)
                 {
 
                     int leftLen = cache.DataCount;
@@ -320,7 +320,7 @@ namespace Kubility
                         lock (m_lock)
                         {
                             m_DataBufferList.AddLast(head);
-                            cache.Clear(MessageHead.HeadLen);
+							cache.Clear(MessageInfo.HeadLen);
                         }
 
                         leftLen = cache.DataCount;
@@ -336,19 +336,19 @@ namespace Kubility
                     if (leftLen >= blen)
                     {
                         BaseMessage message = null;
-                        if (head.Flag == 1)//json
+						if (MessageInfo.MessageType == MessageDataType.Json)//json
                         {
                             message = JsonMessage.CreateAsNet(CacheRead(0, (int)blen), head);
 
                         }
-                        else if (head.Flag == 2)
+						else if (MessageInfo.MessageType  == MessageDataType.Struct)
                         {
                             message = StructDataFactory.Create(CacheRead(0, (int)blen), head);
 
                         }
-                        else if (head.Flag == 0)
+						else if (MessageInfo.MessageType  ==  MessageDataType.ProtoBuf)
                         {
-                            LogMgr.LogError("Read Flag is 0 cant create");
+                            LogMgr.LogError("Protobuf ");
                         }
 
                         if (custom == null)
@@ -400,18 +400,22 @@ namespace Kubility
                         return;
                     }
 
-                    if (message.DataHead.Flag == 1)
+                    if (MessageInfo.MessageType == MessageDataType.Json)
                     {
                         JsonMessage json = (JsonMessage)message;
                         Action<string> rac = (Action<string>)ac;
                         rac(json.jsonData);
                     }
-                    else if (message.DataHead.Flag == 2)
+					else if (MessageInfo.MessageType == MessageDataType.Struct)
                     {
                         StructMessage data = (StructMessage)message;
                         Action<ValueType> rac = (Action<ValueType>)ac;
                         rac(data.StructData);
                     }
+					else if (MessageInfo.MessageType == MessageDataType.ProtoBuf)
+					{
+
+					}
 
                     lock (mlock)
                     {
