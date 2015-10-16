@@ -159,6 +159,7 @@ namespace Kubility
 
 			requestList = new Stack<MiniTuple<string, HttpType, object>>();
 			this.m_curRequest = new MiniTuple<string, HttpType, object>();
+			ErrorManager.mIns.Register<HttpUnit>(this);
 #if USE_COR
 #else
 			this.m_lock = new object();
@@ -379,49 +380,67 @@ namespace Kubility
 
 			MiniTuple<string, System.Action<string>> temp = (MiniTuple<string, System.Action<string>>)curRequest.field2;
             string strRequest = temp.field0;
+			HttpWebRequest req = null;
+			HttpWebResponse Response = null;
             try
             {
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
-                if (curRequest.field1 == HttpType.POST)
-                {
+				req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
+				if (curRequest.field1 == HttpType.POST)
+				{
+					
+					req.Timeout = Config.mIns.Http_TimeOut;
+					req.Method = "POST";
+				}
+				else if (curRequest.field1 == HttpType.GET)
+				{
+					
+					req.Timeout = Config.mIns.Http_TimeOut; 
+					req.ContentType = "application/x-www-form-urlencoded";
+					req.Method = "GET";
+				}
+				
+				byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
+				req.ContentLength = btBodys.Length;
+				using (Stream respSb = req.GetRequestStream())
+				{
+					respSb.Write(btBodys, 0, btBodys.Length);
+				}
 
-                    req.Timeout = Config.mIns.Http_TimeOut;
-                    req.Method = "POST";
-                }
-                else if (curRequest.field1 == HttpType.GET)
-                {
 
-                    req.Timeout = Config.mIns.Http_TimeOut; req.Timeout = 20000;
-                    req.ContentType = "application/x-www-form-urlencoded";
-                    req.Method = "GET";
-                }
-
-
-                byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
-                req.ContentLength = btBodys.Length;
-                req.GetRequestStream().Write(btBodys, 0, btBodys.Length);
-                //LogMgr.Log("resquest  = " + strRequest);
-
-                var Response = (HttpWebResponse)req.GetResponse();
-                var sr = new StreamReader(Response.GetResponseStream());
-
-                string responseContent = sr.ReadToEnd();
-
-                if (temp.field1 != null)
-                {
-                    temp.field1(responseContent);
-                }
-
-                req.Abort();
-                Response.Close();
-                sr.Close();
-
+				using ( Response = (HttpWebResponse)req.GetResponse())
+				{
+					var sr = new StreamReader(Response.GetResponseStream());
+					
+					string responseContent = sr.ReadToEnd();
+					
+					if (temp.field1 != null)
+					{
+						temp.field1(responseContent);
+					}
+					
+					req.Abort();
+					sr.Close();
+				}
             }
-            catch (WebException webEx)
+            catch (Exception webEx)
             {
+
                 DealWithEx(webEx);
 
             }
+			finally
+			{
+				if(req != null)
+				{
+					req.Abort();
+				}
+				
+				if(Response != null)
+				{
+					Response.Close();
+				}
+
+			}
 
 
         }
@@ -693,6 +712,7 @@ namespace Kubility
 
             KThread.CloseAll();
             requestList.Clear();
+			UnRegisterAll();
 
         }
 
@@ -758,6 +778,13 @@ namespace Kubility
                     }
                 }
             }
+			else
+			{
+				if (m_OthersErrorEvent != null)
+				{
+					m_OthersErrorEvent(Ex);
+				}
+			}
             //						LogMgr.Log ("Exception  = " + webEx);
 
         }
