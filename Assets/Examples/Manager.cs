@@ -166,17 +166,72 @@ public class Manager : MonoBehaviour
 		GUILayout.Space (10);
 		GUILayout.Label ("state = " + isDone, GUILayout.Width (200));
 
+		GUILayout.BeginHorizontal();
 		if (GUILayout.Button ("Pause", GUILayout.Width (200))) {
 			http.Pause ();
 		}
+
+		if(GUILayout.Button("Close Socket",GUILayout.Width(200)))
+		{
+			AsyncSocket asocket = client.GetSocket();
+
+			asocket.CloseConnect();
+		}
+
+		GUILayout.EndHorizontal();
+
+		GUILayout.BeginHorizontal();
 
 		if (GUILayout.Button ("Resume", GUILayout.Width (200))) {
 			http.Resume ();
 		}
 
+		if (GUILayout.Button ("Send Struct Message ", GUILayout.Width (200)))
+		{
+			HeartBeatStructData mess;
+			mess.boolValue = true;
+			mess.charValue = 2;
+			mess.doubleValue = 2.3;
+			mess.floatValue = 1.5f;
+			mess.info = "i'm fine @ ~~~ 你好";
+			mess.msgID = 102;
+			var head = new StructMessageHead ();
+			head.CMD = 102;
+			head.bodyLen = (UInt32)Marshal.SizeOf (mess);
+
+			var message = StructMessage.Create (head, mess);
+
+			client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
+				LogMgr.LogError ("Struct Message Callback");
+				KTool.Dump (obj);
+			});
+		}
+
+		if (GUILayout.Button ("Send Json Message ", GUILayout.Width (200)))
+		{
+			var test = new Test ();
+			test.val.Add (123);
+			test.val.Add (246);
+			test.val.Add (45);
+			var Jsonhead = new JsonMessageHead ();
+			var jsonMessage = JsonMessage.Create<Test> (test, Jsonhead);
+			client.Send<Test> (jsonMessage, delegate(Test obj) {
+				LogMgr.LogError ("Json Message Callback");
+				KTool.Dump (obj);
+				
+			});
+
+
+		}
+
+		GUILayout.EndHorizontal();
+
+		GUILayout.BeginHorizontal();
+
 		if (GUILayout.Button ("start", GUILayout.Width (200))) {
-			http.BeginDownLoadFileFlushToFile ("http://118.192.69.207:8083/monster.apk",
-				Application.persistentDataPath + "/mons.apk",
+
+			string rootpath = Application.persistentDataPath;
+			http.BeginDownLoadFileFlushToFile ("http://118.192.69.207:8083/monster.apk",rootpath + "/mons.assetbundle",
 			delegate(byte[] arg1, float arg2, bool arg3) 
 			{
 					value = arg2;
@@ -186,8 +241,7 @@ public class Manager : MonoBehaviour
 			
 			http.StartConnect ();
 
-//			http.BeginDownLoadFileFlushToMemory ("http://118.192.69.207:8083/monster.apk",
-////			                                   Application.persistentDataPath + "/mons.apk",
+//			http.BeginDownLoadFileFlushToMemory ("http://118.192.69.207:8083/monster.apk",rootpath + "/mons.apk",
 //			delegate(byte[] arg1, float arg2, bool arg3)
 //			{
 //				value = arg2;
@@ -198,6 +252,16 @@ public class Manager : MonoBehaviour
 //			http.StartConnect ();
 		}
 
+		if(GUILayout.Button("Reconnect Socket",GUILayout.Width(200)))
+		{
+			AsyncSocket asocket = client.GetSocket();
+
+			client.Reconnect();
+
+		}
+
+
+		GUILayout.EndHorizontal();
 	}
 
 

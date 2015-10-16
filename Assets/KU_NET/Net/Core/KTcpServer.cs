@@ -17,11 +17,6 @@ namespace Kubility
 			
 			return true;
 		}
-		
-		
-		
-
-
 	}
 }
 

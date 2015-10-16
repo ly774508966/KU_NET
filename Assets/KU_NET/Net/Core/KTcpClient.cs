@@ -14,16 +14,16 @@ namespace Kubility
 	/// </summary>
 	public class KTcpClient :AbstractNetUnit
 	{
-		SocketAsyncEventArgsPool m_pool = new SocketAsyncEventArgsPool();
 		public bool quit =false;
 
 		AsyncSocket _socket;
 		KThread m_SendThread;
 		KThread m_ReceiveThread;
+		IPEndPoint ipend ;
 
 		ManualResetEvent mlock = new ManualResetEvent(false);
 
-		#region init Interface
+		#region public Interface
 		/// <summary>
 		/// 
 		/// </summary>
@@ -40,15 +40,53 @@ namespace Kubility
 				return false;
 			}
 
-			IPEndPoint ipend = new IPEndPoint(ip,port);
+			ipend= new IPEndPoint(ip,port);
 
 			_socket =AsyncSocket.Create( CreateTcpConnect(),ipend);
 
-			m_pool.CreateSocketArgs(ipend,_socket,AcceptEventArg_OnConnectCompleted);
+			SocketAsyncEventArgsPool.mIns.CreateSocketArgs(ipend,_socket,AcceptEventArg_OnConnectCompleted);
 
 			startConnect(_socket,null);
 			return true;
 		}
+
+		
+		public void Send(BaseMessage message)
+		{
+			MessageManager.mIns.GetSendQueue().Push_Back(message);
+		}
+		
+		public void Send<T>(BaseMessage message,Action<T> callback)
+		{
+			MessageManager.mIns.GetSendQueue().Push_Back(message);
+			message.Wait_Deserialize<T>(callback);
+		}
+
+		public void Reconnect()
+		{
+			_socket.Reconnect((bool value)=>
+			{
+//				LogMgr.LogError("Reconnect callback  "+ value );
+				if(value)
+				{
+					mlock.Set();
+				}
+			});
+		}
+		
+		public void Close()
+		{
+			quit= true;
+			mlock.Set();
+			SocketAsyncEventArgsPool.mIns.Close();
+		}
+
+		public AsyncSocket GetSocket()
+		{
+			return _socket;
+		}
+
+		#endregion
 
 		void startConnect(AsyncSocket psocket, SocketAsyncEventArgs ev)
 		{
@@ -65,18 +103,23 @@ namespace Kubility
 			psocket.ConnectAsync(ev,ConnectCallback);
 		}
 
-		public void Close()
-		{
-			quit= true;
-			mlock.Set();
-			m_pool.Close();
-		}
+
 
 		void ConnectCallback(SocketAsyncEventArgs args)
 		{
-
-			KThread.StartTask(ThreadSendMessage);
-			KThread.StartTask(ThreadReceiveMessage);
+			if(m_SendThread == null)
+			{
+				m_SendThread =  KThread.StartTask(ThreadSendMessage);
+			}
+			
+			if(m_ReceiveThread == null)
+			{
+				m_ReceiveThread =KThread.StartTask(ThreadReceiveMessage);
+			}
+			else
+			{
+				mlock.Set();
+			}
 		}
 		
 		void ThreadSendMessage()
@@ -92,7 +135,7 @@ namespace Kubility
 					if(message != null)
 					{
 
-						m_pool.Pop_FreeForSend(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
+						SocketAsyncEventArgsPool.mIns.Pop_FreeForSend(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
 						{
 							//LogMgr.Log("Pop_FreeForSend  laststate = "+ _socket.GetSocketState());
 
@@ -123,7 +166,7 @@ namespace Kubility
 
 				if(SocketAviliable())
 				{
-					m_pool.Pop_FreeForReceive(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
+					SocketAsyncEventArgsPool.mIns.Pop_FreeForReceive(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
 					{
 
 						if(!retCode)
@@ -131,8 +174,8 @@ namespace Kubility
 							_socketEvargs.RemoteEndPoint = _socket.GetRemoteIP();
 							_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
 						}
-						//LogMgr.Log("Pop_FreeForReceive  laststate = "+ _socket.GetSocketState() +" retCode ="+retCode );
-						//KTool.Dump(_socketEvargs);
+//						LogMgr.Log("Pop_FreeForReceive  laststate = "+ _socket.GetSocketState() +" retCode ="+retCode );
+
 						_socket.ReceiveAsync(_socketEvargs,ReveiveCallBack);
 
 
@@ -143,20 +186,23 @@ namespace Kubility
 
 			
 		}
-		
-		public void Send(BaseMessage message)
-		{
-			MessageManager.mIns.GetSendQueue().Push_Back(message);
-		}
 
-		public void Send<T>(BaseMessage message,Action<T> callback)
-		{
-			MessageManager.mIns.GetSendQueue().Push_Back(message);
-			message.Wait_Deserialize<T>(callback);
-		}
 
 		void AcceptEventArg_OnConnectCompleted(object obj,SocketAsyncEventArgs ev)
 		{
+			Socket socket = obj as Socket;
+
+			if(socket == null && !socket.Connected && !quit)
+			{
+				AsyncSocket.Create(socket,this.ipend).TryConnect(ev,ConnectCallback);
+				return;
+			}
+			else if(quit)
+			{
+				//may do something
+				return;
+			}
+
 			_socket.SetStateFree();
 			if(ev == null)
 			{
@@ -167,11 +213,11 @@ namespace Kubility
 			{
 				ev.AcceptSocket = null;
 			}
-			//LogMgr.Log("LastOperation = "+ ev.LastOperation.ToString());
+
+//			LogMgr.LogError("LastOperation = "+ ev.LastOperation.ToString());
 			if(ev.LastOperation == SocketAsyncOperation.Connect)
 			{
-				KThread.StartTask(ThreadSendMessage);
-				KThread.StartTask(ThreadReceiveMessage);
+				ConnectCallback(ev);
 
 			}
 			else if(ev.LastOperation == SocketAsyncOperation.Receive)
@@ -215,7 +261,6 @@ namespace Kubility
 
 			mlock.Set();
 
-
 		}
 
 		void ProcessReceive(byte[] Bytes,int rlen)
@@ -225,9 +270,6 @@ namespace Kubility
 			MessageManager.mIns.PushToReceiveBuffer(readData);
 
 		}
-
-
-		#endregion
 
 		bool SocketAviliable()
 		{

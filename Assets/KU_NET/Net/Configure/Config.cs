@@ -8,6 +8,7 @@ namespace Kubility
 
         public int HttpSpeedLimit = 10240;
         public int Http_TimeOut = 2000;
+		public int Socket_TimeOut =2000;
 
         #region Message
         public uint Version = 10290;

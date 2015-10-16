@@ -29,7 +29,9 @@ namespace Kubility
             DOWNLOADFILE,
 			DOWNLOADFILE_TOMEMORY,
         }
-
+		/// <summary>
+		/// The request list.  will do box op
+		/// </summary>
         Stack<MiniTuple<string, HttpType, object>> requestList;
 
         KThread m_thread;

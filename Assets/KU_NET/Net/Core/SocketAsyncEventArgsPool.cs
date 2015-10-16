@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace Kubility
 {
-    public sealed class SocketAsyncEventArgsPool
+	public sealed class SocketAsyncEventArgsPool:SingleTon<SocketAsyncEventArgsPool>
     {
         /// <summary>
         /// list not best,improve in the further
@@ -119,7 +119,6 @@ namespace Kubility
                     //may some bug
                     while (cmdList.Count > 0)
                     {
-                        //						LogMgr.LogError("PoolThread  -1");
                         PoolCMD cmd = cmdList.Pop();
 
                         float DelayTime = cmd.delayTime;
@@ -134,7 +133,11 @@ namespace Kubility
                                 {
                                     SocketEventArgsExtern sub = target.Pool[i];
                                     AsyncSocket socket = sub.m_connectSocket;
-                                    if (socket != null)
+									var state = socket.GetSocketState();
+                                    if (socket != null 
+									    && state != AsyncSocket.SocketArgsStats.UNCONNECT
+									    && state != AsyncSocket.SocketArgsStats.ERROR
+									    && state != AsyncSocket.SocketArgsStats.READY)
                                     {
                                         found = true;
                                         if (cmd.flag == 1)//send
@@ -145,11 +148,14 @@ namespace Kubility
                                         {
                                             cmdEv(sub.m_ReceiveArgs, found);
                                         }
+										else if (cmd.flag ==3)
+										{
+											cmdEv(new SocketAsyncEventArgs(), found);
+										}
                                         else
                                         {
                                             LogMgr.LogError("cmd Error");
                                             found = false;
-
                                         }
 
                                         break;
@@ -166,8 +172,9 @@ namespace Kubility
 
                             if (!found)
                             {
+								LogMgr.LogError("Un found");
                                 SocketAsyncEventArgs newargs = new SocketAsyncEventArgs();
-                                if (cmd.flag == 1)//send
+                                if (cmd.flag == 1 || cmd.flag ==3)//send
                                 {
 
                                 }
@@ -192,7 +199,7 @@ namespace Kubility
                     Pause();
                 }
 
-                LogMgr.Log("PoolThread is Done  = " + quit.ToString());
+//                LogMgr.Log("PoolThread is Done  = " + quit.ToString());
             }
         }
         /// <summary>
@@ -241,6 +248,18 @@ namespace Kubility
             }
 
         }
+
+		public void Pop_FreeForOther(Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
+		{
+			
+			PoolCMD cmd = new PoolCMD();
+			cmd.delayTime = delayTime;
+			cmd.flag = 3;
+			cmd.ev = ev;
+			
+			m_tools.PushCmd(cmd);
+			
+		}
 
         public void Pop_FreeForSend(Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
         {

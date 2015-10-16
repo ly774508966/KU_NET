@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System;
@@ -9,13 +10,15 @@ namespace Kubility
 
     public sealed class AsyncSocket
     {
+		static List<AsyncSocket> list = new List<AsyncSocket>();
+
         readonly object m_lock = new object();
         short times;
         Socket m_socket;
 
         SocketArgsStats m_state;
 
-        EndPoint m_IP;
+		SocketInitData m_InitData;
 
         public enum SocketArgsStats
         {
@@ -30,21 +33,60 @@ namespace Kubility
             ERROR,
         }
 
+		class SocketInitData
+		{
+			public AddressFamily addressFamily;
+			public SocketType socketType;
+			public ProtocolType protocolTtype;
+			public EndPoint RemoteEndPoint;
 
+			public SocketInitData(Socket socket,IPEndPoint ip)
+			{
+				Reset(socket,ip);
+			}
+
+			public void Reset(Socket socket,IPEndPoint ip)
+			{
+				this.addressFamily= socket.AddressFamily;
+				this.socketType = socket.SocketType;
+				this.protocolTtype = socket.ProtocolType;
+				this.RemoteEndPoint = ip;
+			}
+		}
 
         public static AsyncSocket Create(Socket _socket, IPEndPoint ip)
         {
-            AsyncSocket socket = new AsyncSocket();
-            socket.m_socket = _socket;
-            socket.m_IP = ip;
-            socket.times = 0;
+			AsyncSocket socket = null;
+			if(list.Count >0)
+			{
+				socket = list.Find(p=> p.m_socket == _socket);
+			}
+
+			if(socket == null)
+			{
+				socket = new AsyncSocket();
+				socket.m_socket = _socket;
+				socket.times = 0;
+				list.Add(socket);
+			}
+			socket.m_InitData = new SocketInitData(_socket,ip);
+
             return socket;
 
         }
 
+		public void Clear()
+		{
+			foreach(var sub in list)
+			{
+				sub.CloseConnect();
+			}
+			list.Clear();
+		}
+
         public EndPoint GetRemoteIP()
         {
-            return m_IP;
+			return m_InitData.RemoteEndPoint;
         }
 
         public SocketArgsStats GetSocketState()
@@ -61,6 +103,11 @@ namespace Kubility
 
         }
 
+		public SocketArgsStats GetState()
+		{
+			return m_state;
+		}
+
         bool isAviliable()
         {
             return m_socket != null && m_state != SocketArgsStats.ERROR && m_state != SocketArgsStats.UNCONNECT;
@@ -76,7 +123,6 @@ namespace Kubility
                     ret = m_socket.SendPacketsAsync(args);
                     m_state = SocketArgsStats.SEND;
 
-                    //					LogMgr.LogError("SendPacketsAsync  ret "+ ret);
                     if (!ret)
                     {
                         m_state = SocketArgsStats.FREE;
@@ -89,17 +135,51 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null Or ERROR");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
 
         }
+
+		public bool TryConnect(SocketAsyncEventArgs args, Action<SocketAsyncEventArgs> ev)
+		{
+			try
+			{
+				bool ret = false;
+				if (isAviliable())
+				{
+					m_state = SocketArgsStats.CONNECTING;
+					ret = m_socket.ConnectAsync(args);
+					
+					if (!ret)
+					{
+						m_state = SocketArgsStats.FREE;
+						ev(args);
+					}
+					return true;
+				}
+				else
+				{
+					Reconnect();
+					return false;
+				}
+			}
+			catch (SocketException ex)
+			{
+				LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
+				Reconnect();
+				return false;
+			}
+		}
 
         public bool SendToAsync(SocketAsyncEventArgs args, Action<SocketAsyncEventArgs> ev)
         {
@@ -121,12 +201,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null Or ERROR");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
@@ -143,7 +225,6 @@ namespace Kubility
 
                     ret = m_socket.SendAsync(args);
                     m_state = SocketArgsStats.SEND;
-                    //					LogMgr.LogError("SendAsync   =   "+ret);
                     if (!ret)
                     {
                         m_state = SocketArgsStats.FREE;
@@ -154,12 +235,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null Or ERROR");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
@@ -185,12 +268,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null Or ERROR");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
@@ -204,7 +289,7 @@ namespace Kubility
                 bool ret = false;
                 if (isAviliable())
                 {
-                    args.RemoteEndPoint = this.m_IP;
+                    args.RemoteEndPoint = m_InitData.RemoteEndPoint;
                     ret = m_socket.ConnectAsync(args);
                     m_state = SocketArgsStats.CONNECTING;
                     if (!ret)
@@ -217,12 +302,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null Or Error");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
@@ -248,12 +335,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null or Error");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
 
                 return false;
             }
@@ -270,7 +359,6 @@ namespace Kubility
 
                     ret = m_socket.ReceiveAsync(args);
                     m_state = SocketArgsStats.RECEIVE;
-                    //					LogMgr.LogError("ReceiveAsync = "+ret);
                     if (!ret)
                     {
                         m_state = SocketArgsStats.FREE;
@@ -281,12 +369,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null or Error");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
@@ -312,12 +402,14 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null or Error");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
@@ -343,28 +435,69 @@ namespace Kubility
                 else
                 {
                     LogMgr.LogError("  Socket Is Null or Error");
+					m_state = SocketArgsStats.ERROR;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 LogMgr.LogError(ex);
+				m_state = SocketArgsStats.ERROR;
                 Reconnect();
                 return false;
             }
 
         }
 
-        public void Reconnect()
+        public void Reconnect(Action<bool> callback = null)
         {
 
             try
             {
-                if (m_socket != null && m_IP != null)
-                {
-                    m_socket.BeginConnect(m_IP, EndConnect, m_socket);
-                }
-            }
+				LogMgr.Log("cur Connected = "+m_socket.Connected );
+				if (times > Config.mIns.Retry_Times)
+				{
+					LogMgr.LogError("Reconnect Failed " );
+					CloseConnect();
+					if(callback != null)
+					{
+						callback(false);
+					}
+				}
+				else if(m_socket != null && !m_socket.Connected && m_InitData.RemoteEndPoint != null)
+				{
+					m_socket = new Socket(m_InitData.addressFamily,m_InitData.socketType,m_InitData.protocolTtype);
+					
+					m_socket.BeginConnect(m_InitData.RemoteEndPoint, (IAsyncResult iar)=>
+					{
+						Socket handler = (Socket)iar.AsyncState;
+						try
+						{
+							handler.EndConnect(iar);
+							times = 0;
+							m_state = SocketArgsStats.CONNECTING;
+							if(callback != null)
+							{
+								callback(true);
+							}
+						}
+						catch (Exception e)
+						{
+							times++;
+							Reconnect();
+							LogMgr.LogError(e);
+						}
+					}, m_socket);
+				}
+				else
+				{
+					if(callback != null)
+					{
+						callback(false);
+					}
+				}
+				
+			}
             catch (Exception ex)
             {
                 times++;
@@ -378,22 +511,24 @@ namespace Kubility
                     Reconnect();
             }
         }
-
-        void EndConnect(IAsyncResult iar)
-        {
-            Socket handler = (Socket)iar.AsyncState;
-            try
-            {
-                handler.EndConnect(iar);
-                times = 0;
-            }
-            catch (Exception e)
-            {
-                times++;
-                LogMgr.LogError(e);
-            }
-
-        }
+//
+//        void EndConnect(IAsyncResult iar)
+//        {
+//            Socket handler = (Socket)iar.AsyncState;
+//            try
+//            {
+//                handler.EndConnect(iar);
+//                times = 0;
+//				m_state = SocketArgsStats.CONNECTING;
+//            }
+//            catch (Exception e)
+//            {
+//                times++;
+//				Reconnect();
+//                LogMgr.LogError(e);
+//            }
+//
+//        }
 
         public void CloseConnect()
         {
@@ -401,9 +536,10 @@ namespace Kubility
             {
                 if (m_socket.Connected)
                 {
+					m_state = SocketArgsStats.UNCONNECT;
                     m_socket.Shutdown(SocketShutdown.Both);
-                    m_socket.Close();
 
+                    m_socket.Close();
 
                 }
             }
@@ -412,6 +548,10 @@ namespace Kubility
                 LogMgr.LogError("CloseConnect " + ex);
                 CloseConnect();
             }
+			finally
+			{
+				m_state = SocketArgsStats.UNCONNECT;
+			}
         }
 
         public bool Connected()
