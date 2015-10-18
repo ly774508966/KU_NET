@@ -11,13 +11,12 @@ using System.Reflection;
 public class MonoDelegateInspector : Editor
 {
 
-
-    bool foldout;
-
-    //SingleArray<bool> barray = new SingleArray<bool>(RegisterTrans.TransTypes.Length,false);
-
     int selected = 0;
     FieldInfo[] fields = null;
+	readonly string defaultPath = "/Resources/Prefab/";
+	string prefabPath ;
+	ReplacePrefabOptions ReplaceOptions = ReplacePrefabOptions.ConnectToPrefab;
+	UnityEngine.Object prefab;
 
     public override void OnInspectorGUI()
     {
@@ -26,8 +25,6 @@ public class MonoDelegateInspector : Editor
 
         MonoDelegateView mview = (MonoDelegateView)this.target;
         BaseView bview = mview.m_view;
-
-
 
         EditorGUILayout.PrefixLabel(new GUIContent("View Public Field", "use fewer Public fields will Be fine "));
         if (fields == null)
@@ -88,9 +85,33 @@ public class MonoDelegateInspector : Editor
             GUILayout.Space(10);
             DyNamicCreate(transType, bview);
         }
+		string filepath=string.IsNullOrEmpty(prefabPath)? defaultPath +mview.gameObject.name:prefabPath;
+		EditorGUILayout.Space();
+
+		filepath =EditorGUILayout.TextField("PrefabPath",filepath);
+
+		EditorGUILayout.Space();
+		EditorGUILayout.BeginHorizontal();
+
+		if(GUILayout.Button("Convert To Prefab "))
+		{
+			prefab = PrefabUtility.CreateEmptyPrefab("Assets/"+filepath+".prefab") ;
+			AssetDatabase.Refresh();
+			int retryTimes =0;
+			
+			while( AssetDatabase.LoadAssetAtPath<GameObject>("Assets/"+filepath+".prefab") == null && retryTimes <100)
+			{
+				retryTimes++;
+			}
+			PrefabUtility.ReplacePrefab(mview.gameObject, prefab,ReplaceOptions);
 
 
+		}
 
+		ReplaceOptions = (ReplacePrefabOptions)EditorGUILayout.EnumPopup(ReplaceOptions);
+        EditorGUILayout.EndHorizontal();
+
+		EditorGUILayout.Space();
         if (GUI.changed)
             EditorUtility.SetDirty(target);
         serializedObject.ApplyModifiedProperties();

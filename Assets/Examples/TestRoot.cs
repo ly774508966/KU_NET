@@ -97,7 +97,7 @@ public class TestRoot : MonoSingleTon<TestRoot> {
 		LogMgr.LogError("NGUI");
 #endif
 
-
+		ContentManager.mIns.Facotry = new ContentFactory();
 
 		
 		if(NGUI)
