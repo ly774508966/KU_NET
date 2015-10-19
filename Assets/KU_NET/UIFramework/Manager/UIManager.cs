@@ -19,7 +19,7 @@ namespace Kubility
 
     public class UIManager : SingleTon<UIManager>
     {
-        Dictionary<UIType, ClsTuple<BaseView, GameObject>> UiDict = new Dictionary<UIType, ClsTuple<BaseView, GameObject>>();
+		Dictionary<UIType, ClsTuple<MonoDelegateView, GameObject>> UiDict = new Dictionary<UIType, ClsTuple<MonoDelegateView, GameObject>>();
 
         public static KUIROOT current;
 
@@ -192,7 +192,7 @@ namespace Kubility
         }
 #endif
 
-        public BaseView TryGet(UIType Type, string path, string[] subs = null, GameObject Parent = null)
+		public MonoDelegateView TryGet(UIType Type, string path, string[] subs = null, GameObject Parent = null)
         {
 
             if (!UiDict.ContainsKey(Type))
@@ -209,9 +209,9 @@ namespace Kubility
                     obj = current.gameobject.AddChild(prefab);
 
                 }
-                BaseView view = obj.GetComponent<MonoDelegateView>().m_view;
+				MonoDelegateView view = obj.GetComponent<MonoDelegateView>();
 
-                UiDict.Add(Type, new ClsTuple<BaseView, GameObject>(view, obj));
+				UiDict.Add(Type, new ClsTuple<MonoDelegateView, GameObject>(view, obj));
                 if (subs != null && obj != null)
                 {
                     new Task(AddSubPrefabs(subs, obj), true);
@@ -232,7 +232,7 @@ namespace Kubility
             }
 
 
-            ClsTuple<BaseView, GameObject> value = UiDict[Type];
+			ClsTuple<MonoDelegateView, GameObject> value = UiDict[Type];
 
             if (value.field1 == null)
             {

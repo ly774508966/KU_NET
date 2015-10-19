@@ -1,15 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ToggleWrap : MonoBehaviour {
+namespace Kubility
+{
+	public static class ToggleWrap 
+	{
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
 	}
 }
+

@@ -11,11 +11,7 @@ namespace Kubility
         [SerializeField]
         public Animator ani;
         protected int height;
-
         protected int width;
-
-        public AbstractTrans tr;
-        public GameObject gggg;
 
         public UGUIView(AbstractTrans trans)
             : base(trans)

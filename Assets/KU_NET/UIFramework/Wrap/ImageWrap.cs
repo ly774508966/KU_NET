@@ -1,15 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ImageWrap : MonoBehaviour {
+namespace Kubility
+{
+	public static class ImageWrap 
+	{
+		
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
 	}
 }
+

@@ -12,11 +12,12 @@ public class KMainView : MonoDelegateView {
 
 	protected override void Awake ()
 	{
+		base.Awake ();
 		User_Btn.AddListener(UserClick,gameObject);
 		Server_Btn.AddListener(ServerClick);
 		Game_Btn.AddListener(EnterClick);
 		BaseView.Create<BaseView>(this,new HideTrans(gameObject));
-		base.Awake ();
+
 
 	}
 

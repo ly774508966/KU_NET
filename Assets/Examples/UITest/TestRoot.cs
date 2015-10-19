@@ -32,7 +32,7 @@ public class TestRoot : MonoSingleTon<TestRoot> {
 
 				FileStream stream = new FileStream(Application.dataPath+"/smcs.rsp",FileMode.OpenOrCreate,FileAccess.Write);
 				stream.SetLength(0);
-				var bys =System.Text.Encoding.UTF8.GetBytes("-define:KNGUI");
+				var bys =System.Text.Encoding.UTF8.GetBytes("-define:KNGUI -unsafe");
 				stream.Write(bys,0,bys.Length);
 				stream.Close();
 				
@@ -66,7 +66,7 @@ public class TestRoot : MonoSingleTon<TestRoot> {
 
 				FileStream stream = new FileStream(Application.dataPath+"/smcs.rsp",FileMode.OpenOrCreate,FileAccess.Write);
 				stream.SetLength(0);
-				var bys =System.Text.Encoding.UTF8.GetBytes("-define:KUGUI");
+				var bys =System.Text.Encoding.UTF8.GetBytes("-define:KUGUI -unsafe");
 				stream.Write(bys,0,bys.Length);
 				stream.Close();
 

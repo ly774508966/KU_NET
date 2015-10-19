@@ -51,7 +51,7 @@ namespace Kubility
 			}
 		}
 
-		private GameObject TargetGameObject;
+		public GameObject TargetGameObject;
 
 		protected Dictionary<string ,VoidDelegate> customAntioms;
 				#if AUTO_ALIGN
@@ -169,25 +169,22 @@ namespace Kubility
 
 		protected override void OnEnter ()
 		{
-
 			base.OnEnter ();
-
-			if(AutoPos)
+			if(AutoPos && TargetGameObject != null)
 			{
 				TargetGameObject.transform.position = pos;
 			}
-
-#if KUGUI
-			#if AUTO_ALIGN
-
-
+#if KUGI
+#if AUTO_ALIGN
 			Dictionary<UIBehaviour,UIAlign>.Enumerator enumerator = AutoBehaviour.GetEnumerator ();
 			while (enumerator.MoveNext ()) {
 				UIBehaviour behaviour = enumerator.Current.Key;
 				UIAlign align = enumerator.Current.Value;
 				behaviour.AutoAlignWithRectTrans (align);
 			}
-			#endif
+
+#endif
+
 #endif
 
 			if (Trans != null)
