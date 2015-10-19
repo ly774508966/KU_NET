@@ -53,13 +53,29 @@ namespace Kubility
 		
 		public void Send(BaseMessage message)
 		{
-			MessageManager.mIns.GetSendQueue().Push_Back(message);
+			if(message != null)
+			{
+				MessageManager.mIns.GetSendQueue().Push_Back(message);
+			}
+			else
+			{
+				LogMgr.LogError("BaseMessage Send is Null");
+			}
+
 		}
 		
 		public void Send<T>(BaseMessage message,Action<T> callback)
 		{
-			MessageManager.mIns.GetSendQueue().Push_Back(message);
-			message.Wait_Deserialize<T>(callback);
+			if(message != null)
+			{
+				MessageManager.mIns.GetSendQueue().Push_Back(message);
+				message.Wait_Deserialize<T>(callback);
+			}
+			else
+			{
+				LogMgr.LogError("BaseMessage Send<T> is Null");
+			}
+
 		}
 
 		public void Reconnect()

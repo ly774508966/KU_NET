@@ -1,4 +1,4 @@
-﻿#define STRUCT
+﻿
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +6,7 @@ using System;
 using System.Text;
 using System.IO;
 using System.Threading;
+using ProtoBuf;
 
 
 namespace Kubility
@@ -25,13 +26,7 @@ namespace Kubility
 
     public class MessageHead
     {
-#if STRUCT
 
-#elif JSON
-		public const  MessageDataType MessageType = MessageDataType.Json;
-#else
-		public const  MessageDataType MessageType = MessageDataType.ProtoBuf;
-#endif
         protected NetByteBuffer _buffer;
 
         
@@ -179,17 +174,33 @@ namespace Kubility
         /// </summary>
         protected KMessageType messageType;
 
-        public KMessageType MessType
+        public KMessageType MessageType
         {
             get
             {
                 return messageType;
             }
+			set
+			{
+				messageType = value;
+			}
         }
         /// <summary>
         /// content
         /// </summary>
-        protected Union<string, byte[]> DataBody;
+        protected Union<string, byte[]> m_DataBody;
+		public Union<string, byte[]> DataBody
+		{
+			get
+			{
+				return m_DataBody;
+			}
+
+			set
+			{
+				m_DataBody = value;
+			}
+		}
 
 
         /// <summary>
@@ -203,7 +214,7 @@ namespace Kubility
             {
                 return head;
             }
-            protected set
+            set
             {
                 head = value;
             }
@@ -216,7 +227,6 @@ namespace Kubility
             this.messageType = KMessageType.None;
             this.head = new MessageHead();
             this.DataBody = new Union<string, byte[]>();
-
         }
 
 
@@ -235,12 +245,13 @@ namespace Kubility
 
         public virtual byte[] Serialize(bool addHead = true)
         {
+			LogMgr.LogError("no override please  check");
             return null;
         }
 
         public virtual void Wait_Deserialize<T>(Action<T> ev)
         {
-
+			LogMgr.LogError("no override please  check");
         }
 
     }

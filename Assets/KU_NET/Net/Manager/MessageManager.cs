@@ -335,21 +335,13 @@ namespace Kubility
 
                     if (leftLen >= blen)
                     {
-                        BaseMessage message = null;
-						if (MessageInfo.MessageType == MessageDataType.Json)//json
-                        {
-                            message = JsonMessage.CreateAsNet(CacheRead(0, (int)blen), head);
+						BaseMessage message = DataInterface.CurDataCore.DynamicCreate(CacheRead(0, (int)blen), head);
 
-                        }
-						else if (MessageInfo.MessageType  == MessageDataType.Struct)
-                        {
-                            message = StructDataFactory.Create(CacheRead(0, (int)blen), head);
-
-                        }
-						else if (MessageInfo.MessageType  ==  MessageDataType.ProtoBuf)
-                        {
-                            LogMgr.LogError("Protobuf ");
-                        }
+						if(message == null)
+						{
+							LogMgr.LogError("Receive Null Or Deserialze failed or connection Closed");
+							return;
+						}
 
                         if (custom == null)
                             DealWithMessage(message);
@@ -362,7 +354,7 @@ namespace Kubility
                             m_DataBufferList.RemoveFirst();
                         }
 
-                        //						LogMgr.LogError("reduce size  = "+(leftLen -cache.DataCount) );
+// 						LogMgr.LogError("reduce size  = "+(leftLen -cache.DataCount) );
 
                         if (cache.DataCount > 0)
                         {
@@ -414,7 +406,9 @@ namespace Kubility
                     }
 					else if (MessageInfo.MessageType == MessageDataType.ProtoBuf)
 					{
-
+						ProtobufMessage data = (ProtobufMessage)message;
+						Action<byte[]> rac = (Action<byte[]>)ac;
+						rac(data.ProtobufData);
 					}
 
                     lock (mlock)
