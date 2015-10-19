@@ -48,6 +48,8 @@ public class Manager : MonoBehaviour
 		var v1 = (float)buffer;
 		var v2 = (int)buffer;
 		var v3 = (string)buffer;
+
+		LogMgr.Log("v1 = "+ v1.ToString() +" v2 ="+ v2.ToString() +" v3 ="+ v3.ToString());
 		FactoryUtils.InitFactory();
 
 		http = new HttpClient ();
@@ -55,7 +57,6 @@ public class Manager : MonoBehaviour
 
 		client = new KTcpClient ();
 		client.Init ("127.0.0.1", 11000);
-
 	}
 
 
@@ -197,8 +198,7 @@ public class Manager : MonoBehaviour
 
 		if(GUILayout.Button("Reconnect Socket",GUILayout.Width(150)))
 		{
-			AsyncSocket asocket = client.GetSocket();
-			
+
 			client.Reconnect();
 			
 		}

@@ -36,15 +36,6 @@ namespace Kubility
 			return base.IsActive ();
 		}
 
-		protected override void OnValidate ()
-		{
-			base.OnValidate ();
-		}
-
-		protected override void Reset ()
-		{
-			base.Reset ();
-		}
 
 		protected override void OnRectTransformDimensionsChange ()
 		{
@@ -96,11 +87,6 @@ namespace Kubility
 			base.SetMaterialDirty ();
 		}
 
-		public override void Rebuild (CanvasUpdate update)
-		{
-			base.Rebuild (update);
-		}
-
 		public override void LayoutComplete ()
 		{
 			base.LayoutComplete ();
@@ -111,10 +97,6 @@ namespace Kubility
 			base.GraphicUpdateComplete ();
 		}
 
-		public override void OnRebuildRequested ()
-		{
-			base.OnRebuildRequested ();
-		}
 
 		public override void SetNativeSize ()
 		{
@@ -134,26 +116,6 @@ namespace Kubility
 			}
 		}
 
-		public override Material material {
-			get {
-				return base.material;
-			}
-			set {
-				base.material = value;
-			}
-		}
-
-		public override Material materialForRendering {
-			get {
-				return base.materialForRendering;
-			}
-		}
-
-		public override Texture mainTexture {
-			get {
-				return base.mainTexture;
-			}
-		}
 
 		public override Material GetModifiedMaterial (Material baseMaterial)
 		{

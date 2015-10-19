@@ -14,7 +14,7 @@ public class MonoDelegateInspector : Editor
     int selected = 0;
     FieldInfo[] fields = null;
 	readonly string defaultPath = "/Resources/Prefab/";
-	string prefabPath ;
+	string prefabPath ="";
 	ReplacePrefabOptions ReplaceOptions = ReplacePrefabOptions.ConnectToPrefab;
 	UnityEngine.Object prefab;
 

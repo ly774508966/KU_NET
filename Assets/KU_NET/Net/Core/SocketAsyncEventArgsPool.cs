@@ -172,7 +172,6 @@ namespace Kubility
 
                             if (!found)
                             {
-								LogMgr.LogError("Un found");
                                 SocketAsyncEventArgs newargs = new SocketAsyncEventArgs();
                                 if (cmd.flag == 1 || cmd.flag ==3)//send
                                 {

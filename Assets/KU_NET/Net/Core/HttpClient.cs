@@ -73,14 +73,26 @@ public class HttpClient : AbstractNetUnit
         m_http.AddField(field, content);
     }
 	/// <summary>
-	/// Pause the lastest thread
+	/// Pause 
 	/// </summary>
     public void Pause()
     {
-        KThread th = curThread;
-        if (th != null)
-            th.ForceSuspend();
+		m_http.Pause =true;
+//        KThread th = curThread;
+//        if (th != null)
+//            th.ForceSuspend();
     }
+
+	/// <summary>
+	/// Resume the lastest thread
+	/// </summary>
+	public void Resume()
+	{
+		m_http.Pause =false;
+		//        KThread th = curThread;
+		//        if (th != null)
+		//            th.ForceResume();
+	}
 
     public void Close()
     {
@@ -91,15 +103,6 @@ public class HttpClient : AbstractNetUnit
     public void PopRequest()
     {
         m_http.PopRequest();
-    }
-	/// <summary>
-	/// Resume the lastest thread
-	/// </summary>
-    public void Resume()
-    {
-        KThread th = curThread;
-        if (th != null)
-            th.ForceResume();
     }
 
     #region others

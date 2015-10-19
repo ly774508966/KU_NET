@@ -58,6 +58,18 @@ namespace Kubility
         MiniTuple<short, int> m_varUtils;
 
 		object m_lock ;
+		bool DownLoadPause =false;
+		public bool Pause
+		{
+			get
+			{
+				return DownLoadPause;
+			}
+			set
+			{
+				DownLoadPause = value;
+			}
+		}
 
 #endif
 
@@ -583,36 +595,34 @@ namespace Kubility
 			bool bvalue = false;
 			try
 			{
-                
-	            while (!bvalue)
+				byte[] bys = new byte[req.field1];
+				int readLen = DataOutStream.Read(bys, 0, bys.Length);
+				int maxLen = readLen;
+				int total = readLen;
+				while (readLen > 0  )
 				{
-					byte[] bys = new byte[req.field1];
-					int readLen = DataOutStream.Read(bys, 0, bys.Length);
-					int maxLen = readLen;
-					int total = readLen;
-					while (readLen > 0  )
+					if(DownLoadPause)
+						continue;
+					
+					if (DataIntStream != null)
 					{
-							
-						if (DataIntStream != null)
-						{
-							DataIntStream.Write(bys, 0, readLen);
-						}
-						bvalue = total == totalSize;
-						if (callback != null)
-						{
-							float value = (float)(oldSize + total) / (float)(totalSize+ oldSize);
-							callback(bys, value, bvalue);
-						}
-						readLen = DataOutStream.Read(bys, 0, bys.Length);
-							
-						total += readLen;
-
-                        maxLen = Math.Max(readLen, maxLen);
+						DataIntStream.Write(bys, 0, readLen);
 					}
-	
+					bvalue = total == totalSize;
+					if (callback != null)
+					{
+						float value = (float)(oldSize + total) / (float)(totalSize+ oldSize);
+						callback(bys, value, bvalue);
+					}
+					readLen = DataOutStream.Read(bys, 0, bys.Length);
+					
+					total += readLen;
+					
+					maxLen = Math.Max(readLen, maxLen);
 				}
-			}
 
+				bvalue = true;
+			}
 			catch (Exception ex)
 			{
 				if (m_OthersErrorEvent != null)

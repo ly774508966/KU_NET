@@ -30,22 +30,12 @@ namespace Kubility
 		{
 			base.OnDestroy ();
 		}
-		
+
 		public override bool IsActive ()
 		{
 			return base.IsActive ();
 		}
-		
-		protected override void OnValidate ()
-		{
-			base.OnValidate ();
-		}
-		
-		protected override void Reset ()
-		{
-			base.Reset ();
-		}
-		
+
 		protected override void OnRectTransformDimensionsChange ()
 		{
 			base.OnRectTransformDimensionsChange ();
@@ -110,12 +100,7 @@ namespace Kubility
 		{
 			base.GraphicUpdateComplete ();
 		}
-		
-		public override void OnRebuildRequested ()
-		{
-			base.OnRebuildRequested ();
-		}
-		
+
 		public override void SetNativeSize ()
 		{
 			base.SetNativeSize ();

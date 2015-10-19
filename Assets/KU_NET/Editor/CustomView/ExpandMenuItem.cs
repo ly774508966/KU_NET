@@ -67,8 +67,8 @@ namespace Kubility
 		public static void CreateButton(MenuCommand commond)
 		{
 			GameObject go = CreateUIElementRoot("Button", commond, s_ThickGUIElementSize);
-			ImageExpand image = go.AddComponent<ImageExpand>();
-			Button btn = go.AddComponent<Button>();
+			go.AddComponent<ImageExpand>();
+			go.AddComponent<Button>();
 
 
 			GameObject textGo = new GameObject("Label");
@@ -144,7 +144,7 @@ namespace Kubility
 			GameObject handle = CreateObj("Handle", handleArea);
 			
 			// Background
-			ImageExpand backgroundImage = AddImage(background,Color.white,kBackgroundSpriteResourcePath);
+			AddImage(background,Color.white,kBackgroundSpriteResourcePath);
 
 			RectTransform backgroundRect = background.GetComponent<RectTransform>();
 			backgroundRect.anchorMin = new Vector2(0, 0.25f);
@@ -159,7 +159,7 @@ namespace Kubility
 			fillAreaRect.sizeDelta = new Vector2(-20, 0);
 			
 			// Fill
-			ImageExpand fillImage =AddImage(fill,Color.white,kStandardSpritePath);
+			AddImage(fill,Color.white,kStandardSpritePath);
 			
 			RectTransform fillRect = fill.GetComponent<RectTransform>();
 			fillRect.sizeDelta = new Vector2(10, 0);
@@ -307,7 +307,7 @@ namespace Kubility
 			//Hor scorllbar
 			Scrollbar hbar = Hor_Scrollbar.AddComponent<Scrollbar>();
 
-			ImageExpand hs_bar_image= AddImage(Hor_Scrollbar,Color.white);
+			AddImage(Hor_Scrollbar,Color.white);
 
 			ImageExpand hs_hanlder_image = AddImage(HS_handle,Color.white,kStandardSpritePath);
 
@@ -325,7 +325,7 @@ namespace Kubility
 			Scrollbar vbar =Ver_Scrollbar.AddComponent<Scrollbar>();
 			vbar.direction = Scrollbar.Direction.BottomToTop;
 
-			ImageExpand vs_bar_image= AddImage(Ver_Scrollbar,Color.white);
+			AddImage(Ver_Scrollbar,Color.white);
 			vbar.handleRect =VS_handle.GetComponent<RectTransform>();
 
 			ImageExpand vs_hanlder_image = AddImage(VS_handle,Color.white,kStandardSpritePath);
