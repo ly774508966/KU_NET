@@ -49,11 +49,22 @@ namespace Kubility
 				Content curContent = m_stack.Peek ();
 				MonoDelegateView curView = UIManager.mIns.TryGet (curContent.m_viewType, curContent.m_PrefabPath, con.m_SubPrefabPaths);
 				KObject.KObjectManager.mIns.CallKobjectOnPause (curView.m_view);
+				LogUtils.LogFullInfo("curView",curView);
 			}
 
 			m_stack.Push (con);
 			MonoDelegateView NextView = UIManager.mIns.TryGet (con.m_viewType, con.m_PrefabPath, con.m_SubPrefabPaths);
-			KObject.KObjectManager.mIns.CallKobjectOnEnter (NextView.m_view);
+			if(NextView.isActiveAndEnabled)
+			{
+				KObject.KObjectManager.mIns.CallKobjectOnEnter (NextView.m_view);
+			}
+			else
+			{
+				KObject.KObjectManager.mIns.CallKobjectOnPause (NextView.m_view);
+			}
+
+			LogUtils.LogFullInfo("NextView",NextView);
+
 		}
 
 		public void Push (Content con)
@@ -66,11 +77,20 @@ namespace Kubility
 				Content curContent = m_stack.Peek ();
 				MonoDelegateView curView = UIManager.mIns.TryGet (curContent.m_viewType, curContent.m_PrefabPath, con.m_SubPrefabPaths);
 				KObject.KObjectManager.mIns.CallKobjectOnPause (curView.m_view);
+				LogUtils.LogFullInfo("curView",curView);
 			}
 
 			m_stack.Push (con);
 			MonoDelegateView NextView = UIManager.mIns.TryGet (con.m_viewType, con.m_PrefabPath, con.m_SubPrefabPaths);
-			KObject.KObjectManager.mIns.CallKobjectOnEnter (NextView.m_view);
+			if(NextView.isActiveAndEnabled)
+			{
+				KObject.KObjectManager.mIns.CallKobjectOnEnter (NextView.m_view);
+			}
+			else
+			{
+				KObject.KObjectManager.mIns.CallKobjectOnPause (NextView.m_view);
+			}
+			LogUtils.LogFullInfo("NextView",NextView);
 		}
 
 		public void Pop ()
@@ -79,12 +99,14 @@ namespace Kubility
 				Content curContent = m_stack.Pop ();
 				MonoDelegateView curView = UIManager.mIns.TryGet (curContent.m_viewType, curContent.m_PrefabPath);
 				KObject.KObjectManager.mIns.CallKobjectOnExit (curView.m_view);
+				LogUtils.LogFullInfo("curView",curView);
 			}
 
 			if (m_stack.Count > 0) {
 				Content LastContent = m_stack.Peek ();
 				MonoDelegateView LastView = UIManager.mIns.TryGet (LastContent.m_viewType, LastContent.m_PrefabPath);
 				KObject.KObjectManager.mIns.CallKobjectOnResume (LastView.m_view);
+				LogUtils.LogFullInfo("LastView",LastView);
 			}
 		}
 

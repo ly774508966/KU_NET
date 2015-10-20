@@ -51,7 +51,7 @@ namespace Kubility
 			}
 		}
 
-		public GameObject TargetGameObject;
+		GameObject TargetGameObject;
 
 		protected Dictionary<string ,VoidDelegate> customAntioms;
 				#if AUTO_ALIGN
@@ -170,7 +170,9 @@ namespace Kubility
 		protected override void OnEnter ()
 		{
 			base.OnEnter ();
-			if(AutoPos && TargetGameObject != null)
+			if(AutoPos
+			   && TargetGameObject != null
+			   )
 			{
 				TargetGameObject.transform.position = pos;
 			}

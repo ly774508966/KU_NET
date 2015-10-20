@@ -29,6 +29,7 @@ public class KMainView : MonoDelegateView {
 	public void ServerClick(Button btn)
 	{
 		LogMgr.Log("ServerClick");
+		ContentManager.mIns.Push(SceneViewType.SelectServerView);
 	}
 
 	public void EnterClick(Button btn)

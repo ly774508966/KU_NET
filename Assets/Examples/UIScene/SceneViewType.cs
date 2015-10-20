@@ -15,5 +15,5 @@ public class SceneViewType : UIType
 	}
 
 	public static SceneViewType Login_N1_Scene = new SceneViewType("Login_N1_Scene");
-
+	public static SceneViewType SelectServerView = new SceneViewType("SelectServerView");
 }

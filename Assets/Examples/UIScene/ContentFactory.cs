@@ -49,6 +49,11 @@ public class ContentFactory:ContentFactoryInterface
 			con.m_PrefabPath = "Prefab/MainView";
 			return con;
 		}
+		else if (type ==  SceneViewType.SelectServerView)
+		{
+			con.m_PrefabPath = "Prefab/SelectServer";
+			return con;
+		}
 		
 		
 		throw new System.ArgumentException("type error");
