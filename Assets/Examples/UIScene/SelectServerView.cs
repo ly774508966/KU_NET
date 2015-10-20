@@ -3,8 +3,8 @@ using System.Collections;
 using Kubility;
 
 
-public class SelectServerView : MonoDelegateView {
-
+public class SelectServerView : MonoDelegateView
+{
 	protected override void Awake ()
 	{
 		base.Awake ();

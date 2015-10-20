@@ -10,6 +10,8 @@ public class KMainView : MonoDelegateView {
 	public Button Server_Btn;
 	public Button Game_Btn;
 
+	public Animator an;
+
 	protected override void Awake ()
 	{
 		base.Awake ();
@@ -28,7 +30,7 @@ public class KMainView : MonoDelegateView {
 
 	public void ServerClick(Button btn)
 	{
-		LogMgr.Log("ServerClick");
+
 		ContentManager.mIns.Push(SceneViewType.SelectServerView);
 	}
 
