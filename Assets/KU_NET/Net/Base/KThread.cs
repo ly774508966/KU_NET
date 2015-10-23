@@ -24,7 +24,7 @@ namespace Kubility
 
         bool kill = false;
 
-        protected override void OnCreate()
+		public override void OnCreate()
         {
             base.OnCreate();
 #if SHOW_LOG
@@ -33,7 +33,7 @@ namespace Kubility
 
         }
 
-        protected override void OnPause()
+		public override void OnPause()
         {
             base.OnPause();
 #if SHOW_LOG
@@ -41,7 +41,7 @@ namespace Kubility
 #endif
         }
 
-        protected override void OnResume()
+		public override void OnResume()
         {
             base.OnResume();
 #if SHOW_LOG
@@ -49,7 +49,7 @@ namespace Kubility
 #endif
         }
 
-        protected override void OnDestroy()
+        public override void OnDestroy()
         {
             base.OnDestroy();
 #if SHOW_LOG
@@ -62,7 +62,7 @@ namespace Kubility
 
         }
 
-        protected override void OnEnter()
+		public override void OnEnter()
         {
             base.OnEnter();
 #if SHOW_LOG
@@ -71,7 +71,7 @@ namespace Kubility
 
         }
 
-        protected override void OnExit()
+		public override void OnExit()
         {
             base.OnExit();
 #if SHOW_LOG

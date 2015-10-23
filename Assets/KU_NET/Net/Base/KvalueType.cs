@@ -7,32 +7,32 @@ namespace Kubility
 	public class KValueType :KObject
 	{
 		
-		protected override void OnCreate ()
+		public override void OnCreate ()
 		{
 			base.OnCreate ();
 		}
 
-		protected override void OnPause ()
+		public override void OnPause ()
 		{
 			base.OnPause ();
 		}
 
-		protected override void OnResume ()
+		public override void OnResume ()
 		{
 			base.OnResume ();
 		}
 
-		protected override void OnDestroy ()
+		public override void OnDestroy ()
 		{
 			base.OnDestroy ();
 		}
 
-		protected override void OnEnter ()
+		public override void OnEnter ()
 		{
 			base.OnEnter ();
 		}
 
-		protected override void OnExit ()
+		public override void OnExit ()
 		{
 			base.OnExit ();
 		}

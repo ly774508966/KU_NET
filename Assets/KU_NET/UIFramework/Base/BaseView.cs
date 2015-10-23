@@ -9,8 +9,21 @@ using UnityEngine.EventSystems;
 namespace Kubility
 {
 	[Serializable]
-	public class BaseView :KObject
+	public class BaseView :ScriptableObject, KObjectInterface
 	{
+		private bool _Running;
+		public bool isRunning
+		{
+			get
+			{
+				return _Running;
+			}
+			protected set
+			{
+				_Running = value;
+			}
+		}
+
 		[HideInInspector]
 		[SerializeField]
 		private bool m_AutoPos;
@@ -28,7 +41,7 @@ namespace Kubility
 		[SerializeField]
 		private Vector3 m_pos;
 
-		public Vector3 pos {
+		public Vector3 Pos {
 			get {
 				return m_pos;
 			}
@@ -78,7 +91,7 @@ namespace Kubility
 
 			if (oldview.AutoPos) {
 				view.AutoPos = oldview.AutoPos;
-				view.pos = oldview.pos;
+				view.Pos = oldview.Pos;
 			}
 
 			if (trans == null && oldview._Trans != null) {
@@ -87,6 +100,11 @@ namespace Kubility
 				view.Trans = trans;
 			}
 			value.m_view = view;
+		}
+
+		public BaseView()
+		{
+
 		}
 
 		public BaseView (AbstractTrans  trans)
@@ -138,43 +156,43 @@ namespace Kubility
 
 		}
 
-		protected override void OnCreate ()
+		public virtual void OnCreate ()
 		{
-			base.OnCreate ();
+			isRunning = true;
 			if (Trans != null)
 				Trans.OnCreateTrans ();
 
 		}
 
-		protected override void OnPause ()
+		public virtual void OnPause ()
 		{
-			base.OnPause ();
+			isRunning = false;
 			if (Trans != null)
 				Trans.OnPauseTrans ();
 		}
 
-		protected override void OnResume ()
+		public virtual void OnResume ()
 		{
-			base.OnResume ();
+			isRunning = true;
 			if (Trans != null)
 				Trans.OnResumeTrans ();
 		}
 
-		protected override void OnDestroy ()
+		public virtual void OnDestroy ()
 		{
-			base.OnDestroy ();
+			isRunning =false;
 			if (Trans != null)
 				Trans.OnDestroyTrans ();
 		}
 
-		protected override void OnEnter ()
+		public virtual void OnEnter ()
 		{
-			base.OnEnter ();
+			isRunning =true;
 			if(AutoPos
 			   && TargetGameObject != null
 			   )
 			{
-				TargetGameObject.transform.position = pos;
+				TargetGameObject.transform.position = Pos;
 			}
 #if KUGI
 #if AUTO_ALIGN
@@ -195,9 +213,9 @@ namespace Kubility
 
 		}
 
-		protected override void OnExit ()
+		public virtual void OnExit ()
 		{
-			base.OnExit ();
+			isRunning =false;
 			if (Trans != null)
 				Trans.OnExitTrans ();
 		}

@@ -25,23 +25,35 @@ namespace Kubility
 
         }
 
-        protected override void OnEnter()
-        {
-            base.OnEnter();
+		public override void OnCreate ()
+    	{
+    		base.OnCreate ();
+    	}
 
-        }
+    	public override void OnPause ()
+    	{
+    		base.OnPause ();
+    	}
 
-        protected override void OnExit()
-        {
-            base.OnExit();
+    	public override void OnResume ()
+    	{
+    		base.OnResume ();
+    	}
 
-        }
+    	public override void OnDestroy ()
+    	{
+    		base.OnDestroy ();
+    	}
 
-        protected override void OnCreate()
-        {
-            base.OnCreate();
+    	public override void OnEnter ()
+    	{
+    		base.OnEnter ();
+    	}
 
-        }
+    	public override void OnExit ()
+    	{
+    		base.OnExit ();
+    	}
     }
 }
 

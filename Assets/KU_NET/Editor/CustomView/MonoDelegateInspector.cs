@@ -44,7 +44,7 @@ public class MonoDelegateInspector : Editor
             bview.AutoPos = EditorGUILayout.Toggle("Auto Pos", bview.AutoPos);
             if (bview.AutoPos)
             {
-                bview.pos = EditorGUILayout.Vector3Field("World Pos", mview.gameObject.transform.position);
+                bview.Pos = EditorGUILayout.Vector3Field("World Pos", mview.gameObject.transform.position);
             }
 
         }

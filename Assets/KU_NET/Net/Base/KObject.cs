@@ -8,7 +8,29 @@ using System.Collections.Generic;
 
 namespace Kubility
 {
-	public class KObject
+
+	public interface KObjectInterface
+	{
+		bool isRunning
+		{
+			get;
+		}
+
+		void OnCreate ();
+
+		void OnPause ();
+
+		void OnResume ();
+		
+		void OnDestroy ();
+		
+		void OnEnter ();
+		
+		void OnExit ();
+
+	}
+
+	public class KObject:KObjectInterface
 	{
 				
 		static int count;
@@ -21,7 +43,7 @@ namespace Kubility
 			}
 		}
 
-		public KObject ()
+		protected KObject ()
 		{
 			count++;
 
@@ -32,14 +54,14 @@ namespace Kubility
 			LogMgr.Log ("Object count left =" + count.ToString ());
 		}
 
-		protected virtual void OnCreate ()
+		public virtual void OnCreate ()
 		{
 			#if SHOW_LOG
 			LogMgr.Log (this.ToString () + " OnCreate");
 			#endif
 		}
 
-		protected virtual void OnPause ()
+		public virtual void OnPause ()
 		{
 			_isRunning = false;
 			#if SHOW_LOG
@@ -47,7 +69,7 @@ namespace Kubility
 			#endif
 		}
 
-		protected virtual void OnResume ()
+		public virtual void OnResume ()
 		{
 			_isRunning = true;
 			#if SHOW_LOG
@@ -55,7 +77,7 @@ namespace Kubility
 			#endif
 		}
 
-		protected virtual void OnDestroy ()
+		public virtual void OnDestroy ()
 		{
 			_isRunning = false;
 			#if SHOW_LOG
@@ -66,7 +88,7 @@ namespace Kubility
 
 		}
 
-		protected virtual void OnEnter ()
+		public virtual void OnEnter ()
 		{
 			_isRunning = true;
 			#if SHOW_LOG
@@ -74,7 +96,7 @@ namespace Kubility
 			#endif
 		}
 
-		protected virtual void OnExit ()
+		public virtual void OnExit ()
 		{
 			_isRunning = false;
 			#if SHOW_LOG
@@ -87,37 +109,37 @@ namespace Kubility
 		public class KObjectManager:SingleTon<KObjectManager>
 		{
 
-			public void CallKobjectOnCreate (KObject kobj)
+			public void CallKobjectOnCreate (KObjectInterface kobj)
 			{
 				if (kobj != null)
 					kobj.OnCreate ();
 			}
 
-			public void CallKobjectOnPause (KObject kobj)
+			public void CallKobjectOnPause (KObjectInterface kobj)
 			{
 				if (kobj != null)
 					kobj.OnPause ();
 			}
 
-			public void CallKobjectOnResume (KObject kobj)
+			public void CallKobjectOnResume (KObjectInterface kobj)
 			{
 				if (kobj != null)
 					kobj.OnResume ();
 			}
 
-			public void CallKobjectOnDestroy (KObject kobj)
+			public void CallKobjectOnDestroy (KObjectInterface kobj)
 			{
 				if (kobj != null)
 					kobj.OnDestroy ();
 			}
 
-			public void CallKobjectOnEnter (KObject kobj)
+			public void CallKobjectOnEnter (KObjectInterface kobj)
 			{
 				if (kobj != null)
 					kobj.OnEnter ();
 			}
 
-			public void CallKobjectOnExit (KObject kobj)
+			public void CallKobjectOnExit (KObjectInterface kobj)
 			{
 				if (kobj != null)
 					kobj.OnExit ();
