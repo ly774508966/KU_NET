@@ -1,4 +1,4 @@
-﻿//#define USE_COR
+//#define USE_COR
 
 using UnityEngine;
 using System;
@@ -403,34 +403,38 @@ namespace Kubility
             Action postevent = delegate()
             {
 
-                req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
+
                 if (curRequest.field1 == HttpType.POST)
                 {
-
+					req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
 					req.Timeout = Config.mIns.Http_TimeOut;
                     req.Method = "POST";
 					req.Accept ="text/html, application/xhtml+xml, */*";
+
+					byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
+					
+					if ( btBodys.Length >0)
+					{
+						req.ContentLength = btBodys.Length;
+						using (Stream respSb = req.GetRequestStream())
+						{
+							
+							respSb.Write(btBodys, 0, btBodys.Length);
+						}
+					}
                 }
                 else if (curRequest.field1 == HttpType.GET)
                 {
 
+					req = (HttpWebRequest)WebRequest.Create(curRequest.field0 +"?"+strRequest);
                     req.Timeout = Config.mIns.Http_TimeOut;
-                    req.ContentType = "application/x-www-form-urlencoded";
+					req.ContentType = "application/x-www-form-urlencoded,application/json";
 					req.Accept ="*/*";
                     req.Method = "GET";
                 }
 
-                byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
-                
-				if (curRequest.field1 == HttpType.POST && btBodys.Length >0)
-				{
-					req.ContentLength = btBodys.Length;
-					using (Stream respSb = req.GetRequestStream())
-					{
-						
-						respSb.Write(btBodys, 0, btBodys.Length);
-					}
-				}
+
+
 
 
 //                LogMgr.Log("发送请求");
@@ -839,6 +843,7 @@ namespace Kubility
 					m_OthersErrorEvent(Ex);
 				}
 			}
+            //						LogMgr.Log ("Exception  = " + webEx);
 
         }
 
