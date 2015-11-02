@@ -389,73 +389,115 @@ namespace Kubility
 				else
 					isEmpty =true;
 			}
-			if(isEmpty)
-				return;
-
-			MiniTuple<string, System.Action<string>> temp = (MiniTuple<string, System.Action<string>>)curRequest.field2;
-            string strRequest = temp.field0;
-			HttpWebRequest req = null;
-			HttpWebResponse Response = null;
-            try
+            if (isEmpty)
             {
-				req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
-				if (curRequest.field1 == HttpType.POST)
-				{
-					
+                LogMgr.LogError("Is Empty");
+                return;
+            }
+
+            int trytimes = 2;
+            MiniTuple<string, System.Action<string>> temp = (MiniTuple<string, System.Action<string>>)curRequest.field2;
+            string strRequest = temp.field0;
+            HttpWebRequest req = null;
+            HttpWebResponse Response = null;
+            Action postevent = delegate()
+            {
+
+                req = (HttpWebRequest)WebRequest.Create(curRequest.field0);
+                if (curRequest.field1 == HttpType.POST)
+                {
+
 					req.Timeout = Config.mIns.Http_TimeOut;
-					req.Method = "POST";
-				}
-				else if (curRequest.field1 == HttpType.GET)
-				{
-					
-					req.Timeout = Config.mIns.Http_TimeOut; 
-					req.ContentType = "application/x-www-form-urlencoded";
-					req.Method = "GET";
-				}
-				
-				byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
-				req.ContentLength = btBodys.Length;
-				using (Stream respSb = req.GetRequestStream())
-				{
-					respSb.Write(btBodys, 0, btBodys.Length);
-				}
+                    req.Method = "POST";
+					req.Accept ="text/html, application/xhtml+xml, */*";
+                }
+                else if (curRequest.field1 == HttpType.GET)
+                {
 
+                    req.Timeout = Config.mIns.Http_TimeOut;
+                    req.ContentType = "application/x-www-form-urlencoded";
+					req.Accept ="*/*";
+                    req.Method = "GET";
+                }
 
-				using ( Response = (HttpWebResponse)req.GetResponse())
+                byte[] btBodys = System.Text.Encoding.UTF8.GetBytes(strRequest);
+                
+				if (curRequest.field1 == HttpType.POST && btBodys.Length >0)
 				{
-					var sr = new StreamReader(Response.GetResponseStream());
-					
-					string responseContent = sr.ReadToEnd();
-					
-					if (temp.field1 != null)
+					req.ContentLength = btBodys.Length;
+					using (Stream respSb = req.GetRequestStream())
 					{
-						temp.field1(responseContent);
+						
+						respSb.Write(btBodys, 0, btBodys.Length);
+					}
+				}
+
+
+//                LogMgr.Log("发送请求");
+
+                using (Response = (HttpWebResponse)req.GetResponse())
+                {
+
+                    var sr = new StreamReader(Response.GetResponseStream());
+
+                    string responseContent = sr.ReadToEnd();
+
+                    if (temp.field1 != null)
+                    {
+                        temp.field1(responseContent);
+                    }
+//                    LogMgr.Log("收到请求");
+                    trytimes = 0;
+                    req.Abort();
+                    sr.Close();
+                }
+            };
+			Action httpCall;
+
+			httpCall = delegate() {
+				try
+				{
+					postevent();
+				}
+				catch (Exception webEx)
+				{
+					LogMgr.LogError(webEx);
+					if (webEx is WebException)
+					{
+						var ex = webEx as WebException;
+						if (ex.Status == WebExceptionStatus.Timeout && trytimes > 0)
+						{
+							trytimes--;
+							
+							httpCall();
+						}
+						else
+						{
+							DealWithEx(webEx);
+						}
+						
+					}
+					else
+						DealWithEx(webEx);
+					
+					
+				}
+				finally
+				{
+					if (req != null)
+					{
+						req.Abort();
 					}
 					
-					req.Abort();
-					sr.Close();
+					if (Response != null)
+					{
+						Response.Close();
+					}
+					
 				}
-            }
-            catch (Exception webEx)
-            {
+			};
 
-                DealWithEx(webEx);
-
-            }
-			finally
-			{
-				if(req != null)
-				{
-					req.Abort();
-				}
-				
-				if(Response != null)
-				{
-					Response.Close();
-				}
-
-			}
-
+			httpCall();
 
         }
 #endif
@@ -797,7 +839,6 @@ namespace Kubility
 					m_OthersErrorEvent(Ex);
 				}
 			}
-            //						LogMgr.Log ("Exception  = " + webEx);
 
         }
 
