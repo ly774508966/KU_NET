@@ -158,6 +158,12 @@ namespace Kubility
 
             }
         }
+
+        void Awake()
+        {
+            if(_mins == null)
+                _mins = GetComponent<T>();
+        }
     }
 }
 

@@ -12,9 +12,11 @@ using Pathfinding.Serialization.JsonFx;
 using JsonDotNet;
 using JsonDotNet.Extras;
 using Newtonsoft.Json;
+#elif ProtoBuf
+using ProtoBuf;
 #endif
 
-using ProtoBuf;
+
 
 /// <summary>
 /// 方便以后切换json库等
@@ -80,11 +82,14 @@ public static class ParseUtils
 	/// <returns></returns>
 	public static string ProtoBuf_Serialize<T>(T t)
 	{
+#if ProtoBuf
 		using (MemoryStream ms = new MemoryStream())
 		{
 			Serializer.Serialize<T>(ms, t);
 			return Encoding.UTF8.GetString(ms.ToArray());
 		}
+#else
+		return null;
 	}
 	/// <summary>
 	/// protobuf序列化
@@ -94,11 +99,15 @@ public static class ParseUtils
 	/// <returns></returns>
 	public static byte[] ProtoBuf_SerializeAsBytes<T>(T t)
 	{
+#if ProtoBuf
 		using (MemoryStream ms = new MemoryStream())
 		{
 			Serializer.Serialize<T>(ms, t);
 			return ms.ToArray();
 		}
+#else
+		return null;
+#endif
 	}
 	/// <summary>
 	///protobuf 反序列化
@@ -108,11 +117,15 @@ public static class ParseUtils
 	/// <returns></returns>
 	public static T  ProtoBuf_Deserialize<T>(string content)
 	{
+#if ProtoBuf
 		using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))
 		{
 			T t = Serializer.Deserialize<T>(ms);
 			return t;
 		}
+#else
+		return default(T);
+#endif
 	}
 
 	/// <summary>
@@ -123,11 +136,15 @@ public static class ParseUtils
 	/// <returns></returns>
 	public static T  ProtoBuf_DeserializeWithBytes<T>(byte[] content)
 	{
+#if ProtoBuf
 		using (MemoryStream ms = new MemoryStream(content))
 		{
 			T t = Serializer.Deserialize<T>(ms);
 			return t;
 		}
+#else
+		return default(T);
+#endif
 	}
 
 }

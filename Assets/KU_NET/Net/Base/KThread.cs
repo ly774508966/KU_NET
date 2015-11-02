@@ -9,11 +9,11 @@ namespace Kubility
 {
     public sealed class KThread : KObject
     {
-       	Thread m_thread;
+        Thread m_thread;
 
-		public static bool RaiseAbortException = false;
+        public static bool RaiseAbortException = false;
 
-        ManualResetEvent restEv = new ManualResetEvent(false);
+        ManualResetEvent restEv ;
 
         VoidDelegate VoidEv;
 
@@ -24,7 +24,7 @@ namespace Kubility
 
         bool kill = false;
 
-		public override void OnCreate()
+        public override void OnCreate()
         {
             base.OnCreate();
 #if SHOW_LOG
@@ -33,7 +33,7 @@ namespace Kubility
 
         }
 
-		public override void OnPause()
+        public override void OnPause()
         {
             base.OnPause();
 #if SHOW_LOG
@@ -41,7 +41,7 @@ namespace Kubility
 #endif
         }
 
-		public override void OnResume()
+        public override void OnResume()
         {
             base.OnResume();
 #if SHOW_LOG
@@ -62,7 +62,7 @@ namespace Kubility
 
         }
 
-		public override void OnEnter()
+        public override void OnEnter()
         {
             base.OnEnter();
 #if SHOW_LOG
@@ -71,7 +71,7 @@ namespace Kubility
 
         }
 
-		public override void OnExit()
+        public override void OnExit()
         {
             base.OnExit();
 #if SHOW_LOG
@@ -89,13 +89,17 @@ namespace Kubility
                 m_thread = new Thread(new ThreadStart(ThreadEvents));
                 m_thread.Name = counter.ToString();
                 counter++;
+                restEv= new ManualResetEvent(false);
                 restEv.Reset();
             }
+
+
         }
 
         public static KThread StartTask(VoidDelegate vev, bool autoStart = true)
         {
             KThread th = null;
+
             KThreadPool.mIns.Push_Task(vev, autoStart, delegate(KThread obj)
             {
                 th = obj;
@@ -111,38 +115,50 @@ namespace Kubility
 
             try
             {
+
                 restEv.Set();
+
                 while (!kill)
                 {
-                    restEv.WaitOne();
 
+                    restEv.WaitOne();
+    
                     OnEnter();
+
                     if (VoidEv != null)
                     {
                         VoidEv();
                     }
+                    else
+                        LogMgr.LogError("VoidEv = null ");
 
                     if (SEv != null)
                     {
                         SEv(this);
                     }
+                    else
+                        LogMgr.LogError("SEv = null ");
 
                     OnExit();
                 }
 
                 OnDestroy();
             }
-			catch (ThreadAbortException abortEx)
-			{
-				if(RaiseAbortException)
-				{
-					LogMgr.LogError("ThreadAbortException Error = " + abortEx.ToString());
-				}
-			}
+            catch (ThreadAbortException abortEx)
+            {
+                if(RaiseAbortException)
+                {
+                    LogMgr.LogError("ThreadAbortException Error = " + abortEx.ToString());
+                }
+            }
             catch (Exception ex)
             {
-				LogMgr.LogError("ThreadEvents Error = " + ex.ToString());
+                LogMgr.LogError("ThreadEvents Error = " + ex.ToString());
 
+            }
+            finally
+            {
+                KThreadPool.mIns.Remove(this);
             }
 
         }
@@ -224,8 +240,8 @@ namespace Kubility
         {
             if (m_thread != null)
             {
-				VoidEv = null;
-				SEv =  null;
+                VoidEv = null;
+                SEv =  null;
                 m_thread.Abort();
                 OnDestroy();
             }
@@ -305,9 +321,9 @@ namespace Kubility
                 while (enumerator.MoveNext())
                 {
                     KThread sub = (KThread)enumerator.Current;
-//                  	sub.WillKill();
-					//使用强制关闭
-					sub.Abort();
+//                      sub.WillKill();
+                    //使用强制关闭
+                    sub.Abort();
 
                 }
 
@@ -318,8 +334,8 @@ namespace Kubility
                 {
                     KThread sub = (KThread)wenumerator.Current;
 //                    sub.WillKill();
-					//使用强制关闭
-					sub.Abort();
+                    //使用强制关闭
+                    sub.Abort();
                 }
                 WaitQueue.Clear();
 
@@ -351,6 +367,15 @@ namespace Kubility
                 }
             }
 
+            public void Remove(KThread th)
+            {
+                lock (m_lock)
+                {
+                    WorkQueue.Remove(th);
+                    WaitQueue.Remove(th);
+                }
+            }
+            
             public void Push_Task(VoidDelegate vev, bool autoStart, Action<KThread> callback = null)
             {
                 TaskQueue.AddLast(vev);
@@ -360,21 +385,21 @@ namespace Kubility
                     if (WaitQueue.Count > 0)
                         callback(WaitQueue.First.Value);
                     else
-					{
-						if (WaitQueue.Count + WorkQueue.Count <= Config.mIns.Thread_MaxSize)
-						{
-							var th = new KThread();
-							Push_ToWaitQueue(th);
-							
-							callback(WaitQueue.First.Value);
-						}
-					}
+                    {
+                        if (WaitQueue.Count + WorkQueue.Count <= Config.mIns.Thread_MaxSize)
+                        {
+                            var th = new KThread();
+                            Push_ToWaitQueue(th);
+                            
+                            callback(WaitQueue.First.Value);
+                        }
+                    }
 
-				}
-				
-				
-				if (autoStart)
-					StartTask(GetFirstTask());
+                }
+                
+                
+                if (autoStart)
+                    StartTask(GetFirstTask());
             }
 
             public VoidDelegate GetFirstTask()
@@ -394,6 +419,7 @@ namespace Kubility
 
                 if (WaitQueue.Count > 0)
                 {
+
                     KThread th = null;
                     lock (m_lock)
                     {
@@ -410,17 +436,17 @@ namespace Kubility
                         if (th == null)
                             return;
 
+                        th.VoidEv = null;
+                        th.SEv = null;
+
+                        th.VoidEv += vev;
+                        th.SEv = Check;
 
                         WorkQueue.AddLast(th);
                         WaitQueue.Remove(th);
                     }
 
-
-                    th.VoidEv = null;
-                    th.SEv = null;
-
-                    th.VoidEv += vev;
-                    th.SEv = Check;
+      
 
                     if (th.m_thread.ThreadState == ThreadState.Unstarted)
                     {
