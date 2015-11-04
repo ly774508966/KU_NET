@@ -90,6 +90,7 @@ public static class ParseUtils
 		}
 #else
 		return null;
+#endif
 	}
 	/// <summary>
 	/// protobuf序列化
