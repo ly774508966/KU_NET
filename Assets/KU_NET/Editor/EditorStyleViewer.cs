@@ -227,91 +227,95 @@ public class EditorStyleViewer : EditorWindow
         int count = 0;
 
         scrollPos = GUI.BeginScrollView(new Rect(0, 18, position.width, position.height - 35), scrollPos, new Rect(0, 0, position.width - 16, totalSizeofView+10));
-//        for (int i = 0; i < initialCount; i++)
-//        {
-//            GUIStyle s = eStyles[i];
-//            if (CanShow(s.name))
-//            {
-//                StylePref sP = stylePrefs[i];
-//                float aHeight = sP.H;
-//                float newY = lastY + 5 * count;
-//                GUI.Box(new Rect(5, newY + 5, position.width - 26, aHeight + 54), "", "helpbox");
-//                Rect area = new Rect(5, newY + 5, position.width - 26, aHeight + 50);
-//                GUI.BeginGroup(area);
-//                GUI.Box(new Rect(0,0,area.width-1,17), "", "CN Box");
-//                GUI.Box(new Rect(0, 18, area.width - 1, 17), "", "OL Title");
-//
-//                GUI.Label(new Rect(0, 2, area.width - 10, 16),
-//                    i + " : " + s.name);
-//
-//                if (GUI.Button(new Rect(0, 18, 60, 14), "Options", "OL Title"))
-//                {
-//                    selOption = i;
-//                    optionsMenu = new GenericMenu();
-//                    optionsMenu.AddItem(new GUIContent("Copy"), false, CopyItem);
-//                    optionsMenu.AddItem(new GUIContent("Display Sample Text"), stylePrefs[selOption].displayText, ShowSampleText);
-//                    optionsMenu.AddItem(new GUIContent("Enable or Disable"), stylePrefs[selOption].enabled, ToggleDisabled);
-//                    optionsMenu.DropDown(new Rect(0, 22, 30, 14));
-//                }
-//
-//                GUI.color = Color.gray;
-//                GUI.Box(new Rect(4, 38, area.width - 8, area.height - 38), "", "GroupBox");
-//                GUI.color = Color.white;
-//
-//                if (stylePrefs[i].displayText)
-//                {
-//                    stylePrefs[i].text = GUI.TextField(new Rect(62, 20, 40, 14), stylePrefs[i].text);
-//                    Rect colorGroup = new Rect(new Rect(104, 20, position.width - 125, 14));
-//                    GUI.BeginGroup(colorGroup);
-//                    stylePrefs[i].bgColor = EditorGUI.ColorField(new Rect(0, 0, colorGroup.width/2 - 5, 14),
-//                        stylePrefs[i].bgColor);
-//                    GUI.color = InvertColor(stylePrefs[i].bgColor);
-//                    GUI.Label(new Rect(0, 0, 120, 14), "BG Color");
-//                    GUI.color = Color.white;
-//
-//                    stylePrefs[i].cColor =
-//                        EditorGUI.ColorField(new Rect(colorGroup.width/2, 0, colorGroup.width/2 - 8, 14),
-//                            stylePrefs[i].cColor);
-//
-//                    GUI.color = InvertColor(stylePrefs[i].cColor);
-//                    GUI.Label(new Rect(colorGroup.width/2, 0, 120, 14), "Text Color");
-//                    GUI.color = Color.white;
-//
-//                    GUI.EndGroup();
-//                    GUI.enabled = stylePrefs[i].enabled;
-//                    GUI.backgroundColor = stylePrefs[i].bgColor;
-//                    GUI.contentColor = stylePrefs[i].cColor;
-//                    Vector2 size = s.CalcSize(new GUIContent(stylePrefs[i].text));
-//                    stylePrefs[i].npActive = GUI.Toggle(new Rect(10, 41, sP.W/2 + size.x, size.y), stylePrefs[i].npActive, stylePrefs[i].text, s);
-//
-//                    if (EditorGUIUtility.isProSkin && selSkin == 1)
-//                    {
-//                        stylePrefs[i].pActive = GUI.Toggle(new Rect(30 + sP.W/2 + size.x, 41, sP.W/2 + size.x, size.y), stylePrefs[i].pActive,
-//                            stylePrefs[i].text, s.name);
-//                    }
-//                    GUI.contentColor = Color.white;
-//                    GUI.backgroundColor = Color.white;
-//                }
-//                else
-//                {
-//                    GUI.enabled = stylePrefs[i].enabled;
-//                    stylePrefs[i].npActive = GUI.Toggle(new Rect(10, 41, sP.W, sP.H), stylePrefs[i].npActive, "", s);
-//
-//                    if (EditorGUIUtility.isProSkin && selSkin == 1)
-//                    {
-//                        stylePrefs[i].pActive = GUI.Toggle(new Rect(30 + sP.W, 41, sP.W, sP.H), stylePrefs[i].pActive,
-//                            "", s.name);
-//                    }
-//                }
-//                GUI.enabled = true;
-//                GUI.EndGroup();
-//                lastY =
-//                    newY - 5 * count
-//                    +
-//                    (aHeight + 54);
-//                count++;
-//            }
-//        }
+        for (int i = 0; i < initialCount; i++)
+        {
+
+
+            GUIStyle s = eStyles[i];
+            if (CanShow(s.name))
+            {
+				if(i >= stylePrefs.Count)
+					break;
+                StylePref sP = stylePrefs[i];
+                float aHeight = sP.H;
+                float newY = lastY + 5 * count;
+                GUI.Box(new Rect(5, newY + 5, position.width - 26, aHeight + 54), "", "helpbox");
+                Rect area = new Rect(5, newY + 5, position.width - 26, aHeight + 50);
+                GUI.BeginGroup(area);
+                GUI.Box(new Rect(0,0,area.width-1,17), "", "CN Box");
+                GUI.Box(new Rect(0, 18, area.width - 1, 17), "", "OL Title");
+
+                GUI.Label(new Rect(0, 2, area.width - 10, 16),
+                    i + " : " + s.name);
+
+                if (GUI.Button(new Rect(0, 18, 60, 14), "Options", "OL Title"))
+                {
+                    selOption = i;
+                    optionsMenu = new GenericMenu();
+                    optionsMenu.AddItem(new GUIContent("Copy"), false, CopyItem);
+                    optionsMenu.AddItem(new GUIContent("Display Sample Text"), stylePrefs[selOption].displayText, ShowSampleText);
+                    optionsMenu.AddItem(new GUIContent("Enable or Disable"), stylePrefs[selOption].enabled, ToggleDisabled);
+                    optionsMenu.DropDown(new Rect(0, 22, 30, 14));
+                }
+
+                GUI.color = Color.gray;
+                GUI.Box(new Rect(4, 38, area.width - 8, area.height - 38), "", "GroupBox");
+                GUI.color = Color.white;
+
+                if (stylePrefs[i].displayText)
+                {
+                    stylePrefs[i].text = GUI.TextField(new Rect(62, 20, 40, 14), stylePrefs[i].text);
+                    Rect colorGroup = new Rect(new Rect(104, 20, position.width - 125, 14));
+                    GUI.BeginGroup(colorGroup);
+                    stylePrefs[i].bgColor = EditorGUI.ColorField(new Rect(0, 0, colorGroup.width/2 - 5, 14),
+                        stylePrefs[i].bgColor);
+                    GUI.color = InvertColor(stylePrefs[i].bgColor);
+                    GUI.Label(new Rect(0, 0, 120, 14), "BG Color");
+                    GUI.color = Color.white;
+
+                    stylePrefs[i].cColor =
+                        EditorGUI.ColorField(new Rect(colorGroup.width/2, 0, colorGroup.width/2 - 8, 14),
+                            stylePrefs[i].cColor);
+
+                    GUI.color = InvertColor(stylePrefs[i].cColor);
+                    GUI.Label(new Rect(colorGroup.width/2, 0, 120, 14), "Text Color");
+                    GUI.color = Color.white;
+
+                    GUI.EndGroup();
+                    GUI.enabled = stylePrefs[i].enabled;
+                    GUI.backgroundColor = stylePrefs[i].bgColor;
+                    GUI.contentColor = stylePrefs[i].cColor;
+                    Vector2 size = s.CalcSize(new GUIContent(stylePrefs[i].text));
+                    stylePrefs[i].npActive = GUI.Toggle(new Rect(10, 41, sP.W/2 + size.x, size.y), stylePrefs[i].npActive, stylePrefs[i].text, s);
+
+                    if (EditorGUIUtility.isProSkin && selSkin == 1)
+                    {
+                        stylePrefs[i].pActive = GUI.Toggle(new Rect(30 + sP.W/2 + size.x, 41, sP.W/2 + size.x, size.y), stylePrefs[i].pActive,
+                            stylePrefs[i].text, s.name);
+                    }
+                    GUI.contentColor = Color.white;
+                    GUI.backgroundColor = Color.white;
+                }
+                else
+                {
+                    GUI.enabled = stylePrefs[i].enabled;
+                    stylePrefs[i].npActive = GUI.Toggle(new Rect(10, 41, sP.W, sP.H), stylePrefs[i].npActive, "", s);
+
+                    if (EditorGUIUtility.isProSkin && selSkin == 1)
+                    {
+                        stylePrefs[i].pActive = GUI.Toggle(new Rect(30 + sP.W, 41, sP.W, sP.H), stylePrefs[i].pActive,
+                            "", s.name);
+                    }
+                }
+                GUI.enabled = true;
+                GUI.EndGroup();
+                lastY =
+                    newY - 5 * count
+                    +
+                    (aHeight + 54);
+                count++;
+            }
+        }
         GUI.EndScrollView();
         GUI.Label(new Rect(5,position.height-16,position.width,16), "Last style copied : " + lastCopy);
         Repaint();

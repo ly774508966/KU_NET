@@ -39,6 +39,42 @@ namespace Kubility
 			
 			GUILayout.EndHorizontal ();
 		}
+
+		public static bool FoldOut(Rect rect, bool value ,string content,string GuiStyle =null)
+		{
+			bool ret =false;
+			GUILayout.BeginArea(rect);
+			GUILayout.BeginHorizontal();
+
+			int oldsize = GUI.skin.label.fontSize;
+			GUI.skin.label.fontSize = 13;
+			
+			string[] SubString = content.Split('/');
+			int sublen =0;
+			if(SubString.Length >0)
+			{
+				sublen = SubString.Length;
+				content = SubString[sublen-1];
+			}
+
+			if(!string.IsNullOrEmpty(GuiStyle))
+			{
+				ret = EditorGUI.Foldout(new Rect((sublen-1) *20,0,20,20),value,"",GuiStyle);//ChannelStripDuckingMarker
+
+			}
+			else
+				ret = EditorGUI.Foldout(new Rect((sublen-1)  *20,0,20,20),value,"");
+
+			GUI.Label(new Rect(rect.x +20 *sublen,0,rect.width-20*sublen,20),content);
+
+			GUI.skin.label.fontSize = oldsize;
+
+			GUILayout.EndHorizontal();
+			GUILayout.EndArea();
+			return ret;
+		}
+
+
 		
 	}
 
