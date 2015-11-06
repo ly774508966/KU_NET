@@ -5,7 +5,7 @@ using UnityEditor;
 using System;
 using System.IO;
 
-namespace Kubility
+namespace Kubility.Editor
 {
 
     public class GlobalMacro : EditorWindow

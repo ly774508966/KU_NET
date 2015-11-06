@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 
-namespace Kubility
+namespace Kubility.Editor
 {
 	public class BaseViewEditorUtility 
 	{

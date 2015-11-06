@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UI;
 
-namespace Kubility
+namespace Kubility.Editor
 {
 
 	public enum ToolMenu
@@ -67,7 +67,7 @@ namespace Kubility
 		Vector2 GraphLeftPos;
 
 
-		Rect oldPosition;
+		Rect oldPosition ;
 
 		int frames =0;
 		float alltime =0f;
@@ -100,9 +100,9 @@ namespace Kubility
 
 		void Init()
 		{
-			oldPosition = position;
 			mGraphRect = new Rect(default_wid,Toolheight,default_height,default_height -Toolheight*2);
 			ResizeScreen(position);
+			oldPosition = position;
 
 		}
 
@@ -115,11 +115,9 @@ namespace Kubility
 			leftBtnsSelected = GUILayout.Toolbar(leftBtnsSelected,leftBtnsTitle,EditorStyles.toolbarButton,GUILayout.Width(180));
 			
 			GUITools.CreateSearChText(ref search,160);
-			OpenLeftBtns(leftBtnsSelected);
-
 			//ScrollView
 			GUILayout.BeginScrollView(scrollPosition);
-			
+			OpenLeftBtns(leftBtnsSelected);
 			GUILayout.EndScrollView();
 			
 			GUILayout.EndVertical();
@@ -157,9 +155,6 @@ namespace Kubility
 			}
 			
 			oldPosition = position;
-
-
-			
 		}
 
 		void HandleEvents()
