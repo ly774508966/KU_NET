@@ -135,16 +135,16 @@ namespace Kubility.Editor
 			
 			++frames;
 			float delta = (Time.realtimeSinceStartup - starttime);
-			alltime +=  Time.timeScale /delta ;
+			alltime += delta;
 			starttime = Time.realtimeSinceStartup;
 			deltatime -= delta;
-			
-			if(deltatime <0f && frames >0)
+
+			if(deltatime <0f )
 			{
-				fps = alltime /frames;
-				alltime =0;
+				fps =frames *Time.timeScale / alltime;
+				alltime =0f;
 				frames=0;
-				deltatime =1f;
+				deltatime =0.5f;
 				
 			}
 			
