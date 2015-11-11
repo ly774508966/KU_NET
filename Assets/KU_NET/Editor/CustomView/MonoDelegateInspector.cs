@@ -27,11 +27,16 @@ public class MonoDelegateInspector : Editor
         MonoDelegateView mview = (MonoDelegateView)this.target;
         BaseView bview = mview.m_view;
 
+		if(bview == null)
+			return;
+
         EditorGUILayout.PrefixLabel(new GUIContent("View Public Field", "use fewer Public fields will Be fine "));
-        if (fields == null)
+		if (fields == null && bview != null)
         {
             fields = bview.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
         }
+
+
 
         for (int i = 0; i < fields.Length; ++i)
         {

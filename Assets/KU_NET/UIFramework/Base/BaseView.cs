@@ -54,7 +54,8 @@ namespace Kubility
 		protected AbstractTrans
 			_Trans;
 				
-		public AbstractTrans Trans {
+		public AbstractTrans Trans
+		{
 			get {
 				return _Trans;
 			}

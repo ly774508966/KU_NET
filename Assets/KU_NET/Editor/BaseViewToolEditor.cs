@@ -79,8 +79,11 @@ namespace Kubility.Editor
 
 		Rect windowRect = new Rect (100 + 100, 100, 100, 100);
 		Rect windowRect2 = new Rect (100, 100, 100, 100);
+
+		Rect LeftWindow ;
 		public static float Toolheight = 20f;
-		const float default_wid = 200f;
+		const float default_Left_wid = 300f;
+		const float default_Right_wid = 500f;
 		const float default_height = 600f;
 
 
@@ -89,9 +92,12 @@ namespace Kubility.Editor
 
 		Color lineCol = new Color(0.5f,0.5f,0.2f);
 
+		bool[] TransArray;
+
 		Texture2D BackGround;
 
 		GenericMenu RightClickMenu = new GenericMenu();
+		GenericMenu LeftClickMenu = new GenericMenu();
 
 		List<BaseViewEditorItem> BaseViewList = new List<BaseViewEditorItem>();
 		List<TransEditorItem> TransList = new List<TransEditorItem>();
@@ -100,28 +106,23 @@ namespace Kubility.Editor
 
 		void Init()
 		{
-			mGraphRect = new Rect(default_wid,Toolheight,default_height,default_height -Toolheight*2);
+			mGraphRect = new Rect(default_Left_wid+5,Toolheight,default_Right_wid,default_height -Toolheight*2);
+			LeftWindow  =new Rect(3,3,default_Left_wid,mGraphRect.height);
 			ResizeScreen(position);
 			oldPosition = position;
+			TransArray = new bool[RegisterTrans.TransTypes.Length];
+
 
 		}
 
 		void OnGUI()
 		{
 			this.mCurrentMousePosition = Event.current.mousePosition;
-			
-			GUILayout.BeginArea(new Rect(3,3,200,mGraphRect.height));
-			GUILayout.BeginVertical();
-			leftBtnsSelected = GUILayout.Toolbar(leftBtnsSelected,leftBtnsTitle,EditorStyles.toolbarButton,GUILayout.Width(180));
-			
-			GUITools.CreateSearChText(ref search,160);
-			//ScrollView
-			GUILayout.BeginScrollView(scrollPosition);
+			leftBtnsSelected = GUILayout.Toolbar(leftBtnsSelected,leftBtnsTitle,EditorStyles.toolbarButton,GUILayout.Width(LeftWindow.width-10));
+			GUILayout.Space(3);
+			GUITools.CreateSearChText(ref search,LeftWindow.width-40);
+
 			OpenLeftBtns(leftBtnsSelected);
-			GUILayout.EndScrollView();
-			
-			GUILayout.EndVertical();
-			GUILayout.EndArea();
 
 			DrawDraphTop();
 			DrawDraphArea();
@@ -164,7 +165,11 @@ namespace Kubility.Editor
 
 				if(mGraphRect.Contains(Event.current.mousePosition))
 				{
-					RightClickEvent();
+					RightClickEvent(true);
+				}
+				else if(LeftWindow.Contains(Event.current.mousePosition))
+				{
+					RightClickEvent(false);
 				}
 
 
@@ -178,6 +183,7 @@ namespace Kubility.Editor
 			   || Mathf.Abs(oldPosition.height- scrennsize.height) >25)//fix
 			{
 //				LogMgr.LogError("change");
+				mGraphRect.x = LeftWindow.width +5;
 				mGraphRect.y = Toolheight;
 				mGraphRect.size = new Vector2(Mathf.Max(0, scrennsize.size.x -Toolheight),Mathf.Max(0,scrennsize.size.y -Toolheight*2));
 				
@@ -188,15 +194,29 @@ namespace Kubility.Editor
 		}
 
 
-		void RightClickEvent()
+		void RightClickEvent(bool right)
 		{
-			LogMgr.Log("right click");
+			if(right)
+			{
+				RightClickMenu.AddDisabledItem(new GUIContent("disableitem" ));
+				RightClickMenu.AddItem(new GUIContent("item1" ),false,Callback,"item1");
+				RightClickMenu.AddSeparator("SubMenu/");
+				RightClickMenu.AddItem(new GUIContent("SubMenu/item2" ),false,Callback,"item 2");
+				RightClickMenu.ShowAsContext();
+			}
+			else
+			{
+				LeftClickMenu.AddItem(new GUIContent("Refresh"),false,LeftDataRefresh,0);
+				LeftClickMenu.ShowAsContext();
+			}
 
-			RightClickMenu.AddDisabledItem(new GUIContent("disableitem" ));
-			RightClickMenu.AddItem(new GUIContent("item1" ),false,Callback,"item1");
-			RightClickMenu.AddSeparator("SubMenu/");
-			RightClickMenu.AddItem(new GUIContent("SubMenu/item2" ),false,Callback,"item 2");
-			RightClickMenu.ShowAsContext();
+
+		}
+
+		public void LeftDataRefresh(object obj)
+		{
+			Debug.Log ("LeftDataRefresh: " + obj);
+
 		}
 
 		public void Callback (object obj) {
@@ -215,20 +235,36 @@ namespace Kubility.Editor
 			}
 			else if(Event.current != null && Event.current.isMouse && Event.current.button == 1)
 			{
-				RightClickEvent();
+				RightClickEvent(true);
 			}
 
 		}
 
+		GenericMenu GWindowMenu = new GenericMenu();
+
 		bool listtoggle;
 		bool foldout ;
+
+		void Test(object obj)
+		{
+
+		}
+
 		private void DrawDraphTop()
 		{
 
-			GUILayout.BeginArea(new Rect(200,0,mGraphRect.width-200+Toolheight,Toolheight));
+			GUILayout.BeginArea(new Rect(mGraphRect.x,0,mGraphRect.width-200+Toolheight,Toolheight));
 			GUILayout.BeginHorizontal();
 
 			listtoggle = GUILayout.Toggle(listtoggle,"","ListToggle");
+			if(listtoggle)
+			{
+				GWindowMenu.AddItem(new GUIContent ("UI层"),false,Test,null);
+				GWindowMenu.AddItem(new GUIContent ("Data层"),false,Test,null);
+				GWindowMenu.AddItem(new GUIContent ("Animation层"),false,Test,null);
+				GWindowMenu.ShowAsContext();
+				listtoggle =false;
+			}
 
 			GUIStyle addStyle = GUI.skin.FindStyle("OL Plus");
 			GUIStyle MinusStyle = GUI.skin.FindStyle("OL Minus");
@@ -268,7 +304,7 @@ namespace Kubility.Editor
 
 		private void DrawDraphBottom()
 		{
-			GUILayout.BeginArea(new Rect(200,20+ mGraphRect.height,mGraphRect.width-200+Toolheight,Toolheight));
+			GUILayout.BeginArea(new Rect(mGraphRect.x,20+ mGraphRect.height,mGraphRect.width-200+Toolheight,Toolheight));
 			GUILayout.BeginHorizontal();
 			GUIStyle addStyle = GUI.skin.FindStyle("OL Plus");
 			GUIStyle MinusStyle = GUI.skin.FindStyle("OL Minus");
@@ -378,24 +414,57 @@ namespace Kubility.Editor
 		bool CreateViewFoldOut1 ;
 		bool CreateViewFoldOut2 ;
 		bool value;
+
+
+		MonoDelegateViewMenu[] leftMDViews;
+
 		void ShowBaseViews()
 		{
-			GUILayout.BeginVertical();
-			CreateViewFoldOut =GUITools.FoldOut(new Rect(0,40,200,20), CreateViewFoldOut,"Create");
-
+			//CreateViewFoldOut =GUITools.FoldOut(new Rect(0,40,200,20), CreateViewFoldOut,"Create");
+			CreateViewFoldOut = EditorGUILayout.Foldout(CreateViewFoldOut,"Create");
 			if(CreateViewFoldOut)
 			{
-				CreateViewFoldOut1 =GUITools.FoldOut(new Rect(0,60,200,20), CreateViewFoldOut1,"Create/Create");
-				if(CreateViewFoldOut1)
+
+				MonoDelegateView[] arr = GameObject.FindObjectsOfType<MonoDelegateView>();
+				if(arr != null )
 				{
-					CreateViewFoldOut2 =GUITools.FoldOut(new Rect(0,80,200,20), CreateViewFoldOut2,"Create/Create/create");
-					CreateViewFoldOut2 =GUITools.FoldOut(new Rect(0,100,200,20), CreateViewFoldOut2,"Create/Create/test");
+					if(leftMDViews == null || leftMDViews.Length != arr.Length)
+					{
+						leftMDViews = new MonoDelegateViewMenu[arr.Length];
+						for(int i =0; i < arr.Length; ++i)
+						{
+							MonoDelegateView view = arr[i];
+							leftMDViews[i] =new  MonoDelegateViewMenu() ;
+						}
+					}
+
+					scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition,GUILayout.Width(LeftWindow.width));
+					float delta =0f;
+					float curpos = 20f;
+					for(int i =0; i < arr.Length; ++i)
+					{
+						MonoDelegateView view = arr[i];
+						delta = leftMDViews[i].ShowEditorContent(view,new Rect(0,curpos,LeftWindow.width,delta));
+						curpos += delta;
+					}
+
+
+					EditorGUILayout.EndScrollView();
 				}
+
+//				CreateViewFoldOut1 =GUITools.FoldOut(new Rect(0,20,200,20), CreateViewFoldOut1,"Create/Create");
+//				if(CreateViewFoldOut1)
+//				{
+//					CreateViewFoldOut2 =GUITools.FoldOut(new Rect(0,40,200,20), CreateViewFoldOut2,"Create/Create/create");
+//					CreateViewFoldOut2 =GUITools.FoldOut(new Rect(0,60,200,20), CreateViewFoldOut2,"Create/Create/test");
+//				}
+
 			}
 
 
+//
 
-			GUILayout.EndVertical();
+
 		}
 
 		void SetTexture(int wid,int height)
