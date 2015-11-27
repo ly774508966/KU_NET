@@ -1,4 +1,5 @@
 ﻿//#define JSONFX
+#define ProtoBuf
 #define JsonDotNet
 using UnityEngine;
 using System.Collections;
@@ -85,7 +86,7 @@ public static class ParseUtils
 #if ProtoBuf
 		using (MemoryStream ms = new MemoryStream())
 		{
-			Serializer.Serialize<T>(ms, t);
+			ProtoBuf.Serializer.Serialize<T>(ms, t);
 			return Encoding.UTF8.GetString(ms.ToArray());
 		}
 #else
@@ -103,7 +104,7 @@ public static class ParseUtils
 #if ProtoBuf
 		using (MemoryStream ms = new MemoryStream())
 		{
-			Serializer.Serialize<T>(ms, t);
+			ProtoBuf.Serializer.Serialize<T>(ms, t);
 			return ms.ToArray();
 		}
 #else
@@ -121,7 +122,7 @@ public static class ParseUtils
 #if ProtoBuf
 		using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))
 		{
-			T t = Serializer.Deserialize<T>(ms);
+			T t = ProtoBuf.Serializer.Deserialize<T>(ms);
 			return t;
 		}
 #else
@@ -140,7 +141,7 @@ public static class ParseUtils
 #if ProtoBuf
 		using (MemoryStream ms = new MemoryStream(content))
 		{
-			T t = Serializer.Deserialize<T>(ms);
+			T t = ProtoBuf.Serializer.Deserialize<T>(ms);
 			return t;
 		}
 #else

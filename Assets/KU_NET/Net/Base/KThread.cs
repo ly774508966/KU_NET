@@ -245,6 +245,10 @@ namespace Kubility
                 m_thread.Abort();
                 OnDestroy();
             }
+			else
+			{
+				OnDestroy();
+			}
         }
 
         public void Join()
@@ -317,26 +321,47 @@ namespace Kubility
                 _stop = true;
                 TaskQueue.Clear();
 
-                var enumerator = WorkQueue.GetEnumerator();
-                while (enumerator.MoveNext())
-                {
-                    KThread sub = (KThread)enumerator.Current;
-//                      sub.WillKill();
-                    //使用强制关闭
-                    sub.Abort();
+				lock(m_lock)
+				{
+					while(WorkQueue.Count >0)
+					{
+						KThread sub = WorkQueue.First.Value;
+						if (sub != null) sub.Abort();
+						WorkQueue.Remove(sub);
+					}
+				}
 
-                }
+//                var enumerator = WorkQueue.GetEnumerator();
+//                while (enumerator.MoveNext())
+//                {
+//                    KThread sub = (KThread)enumerator.Current;
+////                      sub.WillKill();
+//                    //使用强制关闭
+//                    sub.Abort();
+//
+//                }
 
 
                 WorkQueue.Clear();
-                var wenumerator = WaitQueue.GetEnumerator();
-                while (wenumerator.MoveNext())
-                {
-                    KThread sub = (KThread)wenumerator.Current;
-//                    sub.WillKill();
-                    //使用强制关闭
-                    sub.Abort();
-                }
+				lock(m_lock)
+				{
+					while(WaitQueue.Count >0)
+					{
+						KThread sub = WaitQueue.First.Value;
+						if (sub != null) sub.Abort();
+						WaitQueue.Remove(sub);
+					}
+				}
+
+
+//                var wenumerator = WaitQueue.GetEnumerator();
+//                while (wenumerator.MoveNext())
+//                {
+//                    KThread sub = (KThread)wenumerator.Current;
+////                    sub.WillKill();
+//                    //使用强制关闭
+//                    sub.Abort();
+//                }
                 WaitQueue.Clear();
 
             }
@@ -373,6 +398,7 @@ namespace Kubility
                 {
                     WorkQueue.Remove(th);
                     WaitQueue.Remove(th);
+//					th.OnDestroy();
                 }
             }
             

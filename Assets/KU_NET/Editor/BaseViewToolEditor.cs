@@ -113,6 +113,7 @@ namespace Kubility.Editor
 			TransArray = new bool[RegisterTrans.TransTypes.Length];
 
 
+
 		}
 
 		void OnGUI()

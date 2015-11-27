@@ -32,7 +32,7 @@ namespace Kubility
 
 	public class KObject:KObjectInterface
 	{
-				
+//		static List<object> objlist  = new List<object>();
 		static int count;
 				
 		protected bool _isRunning;
@@ -46,12 +46,18 @@ namespace Kubility
 		protected KObject ()
 		{
 			count++;
+//			objlist.Add(this);
 
 		}
 
 		public static void Dump ()
 		{
 			LogMgr.Log ("Object count left =" + count.ToString ());
+
+//			foreach(var sub in objlist)
+//			{
+//				LogMgr.Log(sub.GetType());
+//			}
 		}
 
 		public virtual void OnCreate ()
