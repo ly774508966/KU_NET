@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using System;
 
-public class DValue<T> where T : IConvertible//where T :struct
+public class DValue<T>  where T:struct, IConvertible
+
 {
 	public T old;
 	public T cur;
@@ -56,8 +57,13 @@ public class DValue<T> where T : IConvertible//where T :struct
 	
 	public float GetDefault()
 	{
+		if(mat.HasProperty(Target))
+		{
+			return mat.GetFloat(Target);
+		}
+		return 0f;
 
-		return mat.GetFloat(Target);
+		
 	}
 }
 
