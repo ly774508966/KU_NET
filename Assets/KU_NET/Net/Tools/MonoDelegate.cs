@@ -3,6 +3,7 @@ using System.Collections;
 
 namespace Kubility
 {
+    [ExecuteInEditMode]
     public class MonoDelegate : MonoSingleTon<MonoDelegate>
     {
 

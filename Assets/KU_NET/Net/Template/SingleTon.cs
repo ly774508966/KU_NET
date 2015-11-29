@@ -143,12 +143,26 @@ namespace Kubility
                             GameObject go = GameObject.FindGameObjectWithTag("Kubility");
                             if (go == null)
                             {
-                                go = new GameObject("GLOBAL");
-                                DontDestroyOnLoad(go);
+                                go = GameObject.Find("GLOBAL");
+                                if(go == null)
+                                {
+                                    go = new GameObject("GLOBAL");
+                                    DontDestroyOnLoad(go);
+                                    _mins = go.AddComponent<T>();
+                                }
+                                else
+                                {
+                                    _mins = go.GetComponent<T>();
+                                }
+
                                 go.tag = "Kubility";
                             }
+                            else
+                            {
+                                _mins = go.GetComponent<T>();
+                            }
 
-                            _mins = go.AddComponent<T>();
+                            
                         }
 
                     }
