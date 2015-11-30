@@ -4,3 +4,5 @@ Temp/
 *.csproj
 *.userprefs
 *.sln
+
+obj/Debug/Assembly-CSharp.csproj.FilesWrittenAbsolute.txt
