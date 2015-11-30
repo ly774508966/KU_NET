@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using System;
 
+
 public class DValue<T>  where T:struct, IConvertible
 
 {
@@ -47,23 +48,40 @@ public class DValue<T>  where T:struct, IConvertible
 					mat.SetFloat(Target,(float)System.Convert.ChangeType(cur,typeof(float))) ;
 				}
 				else if(cur.Equals(true) )
-					mat.SetFloat(Target,1f);
+				{
+					mat.EnableKeyword(Target);
+//					mat.SetFloat(Target,1f);
+				}
 				else if (!cur.Equals(true) )
-					mat.SetFloat(Target,0f);;
+				{
+					mat.DisableKeyword(Target);
+				}
+//					mat.SetFloat(Target,0f);;
 			}
 			old  = cur;
 		}
 	}
 	
-	public float GetDefault()
+	public T GetDefault()
 	{
-		if(mat.HasProperty(Target))
-		{
-			return mat.GetFloat(Target);
-		}
-		return 0f;
 
-		
+		if(typeof(T) == typeof(float))
+		{
+			float val =0f;
+			if(mat.HasProperty(Target))
+			{
+				val = mat.GetFloat(Target);
+			}
+
+			return (T)Convert.ChangeType(val ,typeof(T));
+		}
+		else if(typeof(T) == typeof(bool))
+		{
+			return (T)Convert.ChangeType(mat.IsKeywordEnabled(Target) ,typeof(T));
+		}
+
+		return default(T);
+
 	}
 }
 
@@ -76,6 +94,10 @@ public class SimpleShaderEditor :ShaderGUI
 	DValue<bool> Diffuse_Value = new DValue<bool>(false,false,"_DToggle");
 	DValue<bool> Ambient_Value= new DValue<bool>(false,false,"_AToggle");
 	DValue<float> phone_power = new DValue<float>(1f,1f,"phone_power");
+
+	Color Dcol;
+	Color Pcol;
+	Color Acol;
 	
 	// string PhoneString ="_PToggle";
 	// string DiffuseString ="_DToggle";
@@ -97,23 +119,34 @@ public class SimpleShaderEditor :ShaderGUI
 		{
 			if(_mat == null && value != null)
 			{
-				LogMgr.LogError("-1");
 				_mat = value;
+
 				Phone_Value.mat = _mat;
-				Phone_Value.cur = Phone_Value.GetDefault() >0.5f?true:false;
+				Phone_Value.cur = Phone_Value.GetDefault() ;
 				Phone_Value.old = Phone_Value.cur;
+
 				Diffuse_Value.mat = _mat;
-				Diffuse_Value.cur = Diffuse_Value.GetDefault() >0.5f?true:false;
+				Diffuse_Value.cur = Diffuse_Value.GetDefault();
 				Diffuse_Value.old = Diffuse_Value.cur;
+
 				Ambient_Value.mat = _mat;
-				Ambient_Value.cur = Ambient_Value.GetDefault() >0.5f?true:false;
+				Ambient_Value.cur = Ambient_Value.GetDefault() ;
 				Ambient_Value.old =Ambient_Value.cur;
+
 				phone_power.mat = _mat;
 				phone_power.cur = phone_power.GetDefault();
 				phone_power.old = phone_power.cur;
-
+				
+				if(_mat.HasProperty("Diffuse_Color"))
+					Dcol = _mat.GetColor("Diffuse_Color");
+					
+				if(_mat.HasProperty("Ambient_Color"))
+					Acol = _mat.GetColor("Ambient_Color");
+					
+				if(_mat.HasProperty("phone_Color"))	
+					Pcol = _mat.GetColor("phone_Color");
         
-      }
+     		 }
       
 		}
 	}
@@ -128,13 +161,15 @@ public class SimpleShaderEditor :ShaderGUI
 
 	public SimpleShaderEditor()
 	{
-		
+		Dcol = Color.white;
+		Acol = Color.white;
+		Pcol = Color.white;
 	}
 
 	public override void OnGUI (MaterialEditor materialEditor, MaterialProperty[] properties)
 	{
-		base.OnGUI (materialEditor, properties);
 
+		base.OnGUI (materialEditor, properties);
 		mat = materialEditor.target as Material;
 
 		if(mat  != null)
@@ -154,6 +189,15 @@ public class SimpleShaderEditor :ShaderGUI
 		}
 
 		MaterialEditor.ApplyMaterialPropertyDrawers(_mat);
+
+		for(int i=0 ; i < properties.Length;++i)
+		{
+
+//			properties[i].
+		}
+
+
+
 
 	}
 	
@@ -175,6 +219,14 @@ public class SimpleShaderEditor :ShaderGUI
 			phone_power.cur = EditorGUILayout.Slider(phone_power.cur,0,100f);
 			EditorGUILayout.EndVertical();
 			phone_power.Check();
+			
+			Color old = Pcol;
+
+			Pcol = EditorGUILayout.ColorField("镜面反射自定义着色",Pcol);
+			if(old != Pcol)
+			{
+				mat.SetColor("phone_Color",Pcol);
+			}
 		}
 		
 		Phone_Value.Check();
@@ -185,6 +237,17 @@ public class SimpleShaderEditor :ShaderGUI
 	{
 		Diffuse_Value.cur = EditorGUILayout.Toggle("漫反射 开关",Diffuse_Value.cur);
 		Diffuse_Value.Check();
+
+		if(Diffuse_Value.cur)
+		{
+			var old = Dcol;
+			Dcol = EditorGUILayout.ColorField("漫反射自定义着色",Dcol);
+			
+			if(old != Dcol)
+			{
+				mat.SetColor("Diffuse_Color",Dcol);
+			}
+		}
 			
 	}
 	
@@ -193,6 +256,18 @@ public class SimpleShaderEditor :ShaderGUI
 		Ambient_Value.cur = EditorGUILayout.Toggle("环境光 开关",Ambient_Value.cur);
 		
 		Ambient_Value.Check();
+
+		if(Ambient_Value.cur)
+		{
+			var old = Acol;
+			Acol = EditorGUILayout.ColorField("环境光自定义着色",Acol);
+			
+			if(old != Acol)
+			{
+				mat.SetColor("Ambient_Color",Acol);
+			}
+		}
+
 			
 	}
 	
