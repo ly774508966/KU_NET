@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using System;
 
-
 public class DValue<T>  where T:struct, IConvertible
 
 {

@@ -23,7 +23,7 @@ public class HttpClient : AbstractNetUnit
     {
         m_http = CreateHttpConnect();
         resplist = new Stack<Action>();
-        GlobalHelper.mIns.RegisterFixedUpdate(DofixedUpdate);
+//        GlobalHelper.mIns.RegisterFixedUpdate(DofixedUpdate);
     }
 
 
@@ -41,12 +41,19 @@ public class HttpClient : AbstractNetUnit
     {
         m_http.BeginGet(URL, delegate(string obj)
         {
-            Action ac = delegate()
-            {
-                callback(obj);
-            };
-
-            resplist.Push(ac);
+			if(!m_http.UseCor)
+			{
+				Action ac = delegate()
+				{
+					callback(obj);
+				};
+				
+				resplist.Push(ac);
+			}
+			else
+			{
+				callback(obj);
+			}
         }, AutoStart);
     }
 
@@ -54,12 +61,20 @@ public class HttpClient : AbstractNetUnit
     {
         m_http.BeginPost(URL, delegate(string obj)
         {
-            Action ac = delegate()
-            {
-                callback(obj);
-            };
+			if(!m_http.UseCor)
+			{
+				Action ac = delegate()
+				{
+					callback(obj);
+				};
+				
+				resplist.Push(ac);
+			}
+			else
+			{
+				callback(obj);
+			}
 
-            resplist.Push(ac);
         }, AutoStart);
     }
 
@@ -72,42 +87,44 @@ public class HttpClient : AbstractNetUnit
     {
         m_http.AddField(field, content);
     }
+
+	public void AddField(string field, int content)
+	{
+		m_http.AddField(field, content);
+	}
 	/// <summary>
-	/// Pause 
+	/// Pause the lastest thread
 	/// </summary>
     public void Pause()
     {
-		m_http.Pause =true;
-//        KThread th = curThread;
-//        if (th != null)
-//            th.ForceSuspend();
+        KThread th = curThread;
+        if (th != null)
+            th.ForceSuspend();
     }
-
-	/// <summary>
-	/// Resume the lastest thread
-	/// </summary>
-	public void Resume()
-	{
-		m_http.Pause =false;
-		//        KThread th = curThread;
-		//        if (th != null)
-		//            th.ForceResume();
-	}
 
     public void Close()
     {
         m_http.Close();
-        GlobalHelper.mIns.UnRegisterFixedUpdate(DofixedUpdate);
+//        GlobalHelper.mIns.UnRegisterFixedUpdate(DofixedUpdate);
     }
 
     public void PopRequest()
     {
         m_http.PopRequest();
     }
+	/// <summary>
+	/// Resume the lastest thread
+	/// </summary>
+    public void Resume()
+    {
+        KThread th = curThread;
+        if (th != null)
+            th.ForceResume();
+    }
 
     #region others
 
-    void DofixedUpdate()
+    public  void DofixedUpdate()
     {
         while (this.resplist.Count > 0)
         {

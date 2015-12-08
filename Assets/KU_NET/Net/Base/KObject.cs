@@ -1,5 +1,5 @@
 ﻿#if UNITY_EDITOR
-#define SHOW_LOG
+//#define SHOW_LOG
 #endif
 using UnityEngine;
 using System;

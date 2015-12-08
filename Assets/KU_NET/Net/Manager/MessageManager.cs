@@ -209,7 +209,7 @@ namespace Kubility
 
         LinkedList<MessageHead> m_DataBufferList;
 
-        Dictionary<uint, Stack<object>> callbackDic;
+        Dictionary<short, Stack<object>> callbackDic;
 
         Action<BaseMessage> custom;
 
@@ -225,7 +225,7 @@ namespace Kubility
             this.ReceiveQueue = new QuequeTuple();
             this.BufferQueue = new QuequeTuple();
             this.m_DataBufferList = new LinkedList<MessageHead>();
-            this.callbackDic = new Dictionary<uint, Stack<object>>();
+            this.callbackDic = new Dictionary<short, Stack<object>>();
         }
 
 
@@ -313,7 +313,7 @@ namespace Kubility
                 {
 
                     int leftLen = cache.DataCount;
-                    uint blen = 0;
+                    int blen = 0;
                     if (head == null)
                     {
                         head = BaseMessage.ReadHead(CacheRead());

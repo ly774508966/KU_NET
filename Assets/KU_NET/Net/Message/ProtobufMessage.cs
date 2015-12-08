@@ -1,8 +1,11 @@
-﻿using UnityEngine;
+﻿//#define protobuf
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+#if protobuf
 using ProtoBuf;
+#endif
 
 namespace Kubility
 {
@@ -46,7 +49,7 @@ namespace Kubility
 
 				if (head != null && addHead)
 				{
-					head.bodyLen = (uint)DataBody.m_SecondValue.Length;
+					head.bodyLen = DataBody.m_SecondValue.Length;
 					buffer += head.Serialize();
 				}
 				else if (addHead && head == null)

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 
+
 namespace Kubility
 {
 
@@ -316,13 +317,9 @@ namespace Kubility
 				}
 		}
 		
-
-
-	
 		/// <summary>
 		/// struct
 		/// </summary>
-	
 		public struct MiniTuple<T,V>
 		{
 				public T field0;

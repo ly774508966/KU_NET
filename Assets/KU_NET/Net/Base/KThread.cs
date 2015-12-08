@@ -13,7 +13,23 @@ namespace Kubility
 
         public static bool RaiseAbortException = false;
 
-        ManualResetEvent restEv ;
+		private object objLock = new object();
+
+		AutoResetEvent _restEv ;
+		AutoResetEvent restEv
+		{
+			get
+			{
+				lock(objLock)
+				{
+					return _restEv;
+				}
+			}
+			set
+			{
+				_restEv = value;
+			}
+		}
 
         VoidDelegate VoidEv;
 
@@ -23,6 +39,7 @@ namespace Kubility
 
 
         bool kill = false;
+		bool isWorking =false;
 
         public override void OnCreate()
         {
@@ -58,7 +75,6 @@ namespace Kubility
 
             this.VoidEv = null;
             this.SEv = null;
-            this.restEv.Reset();
 
         }
 
@@ -89,8 +105,7 @@ namespace Kubility
                 m_thread = new Thread(new ThreadStart(ThreadEvents));
                 m_thread.Name = counter.ToString();
                 counter++;
-                restEv= new ManualResetEvent(false);
-                restEv.Reset();
+				restEv= new AutoResetEvent(false);
             }
 
 
@@ -115,29 +130,25 @@ namespace Kubility
 
             try
             {
-
-                restEv.Set();
-
                 while (!kill)
                 {
 
                     restEv.WaitOne();
-    
+
                     OnEnter();
 
                     if (VoidEv != null)
                     {
+						isWorking =true;
                         VoidEv();
                     }
-                    else
-                        LogMgr.LogError("VoidEv = null ");
 
-                    if (SEv != null)
+					isWorking =false;
+
+					if (SEv != null && !kill)
                     {
                         SEv(this);
                     }
-                    else
-                        LogMgr.LogError("SEv = null ");
 
                     OnExit();
                 }
@@ -242,8 +253,18 @@ namespace Kubility
             {
                 VoidEv = null;
                 SEv =  null;
-                m_thread.Abort();
-                OnDestroy();
+				if(isWorking)
+				{
+					m_thread.Abort();
+					OnDestroy();
+				}
+				else
+				{
+					kill =true;
+					restEv.Set();
+				}
+                
+               
             }
 			else
 			{
@@ -283,11 +304,11 @@ namespace Kubility
 
             public KThreadPool()
             {
-                for (int i = 0; i < 5; ++i)
-                {
-                    var th = new KThread();
-                    Push_ToWaitQueue(th);
-                }
+//                for (int i = 0; i < 5; ++i)
+//                {
+//                    var th = new KThread();
+//                    Push_ToWaitQueue(th);
+//                }
             }
 
             public void ResumeAll()
@@ -471,11 +492,12 @@ namespace Kubility
                         WorkQueue.AddLast(th);
                         WaitQueue.Remove(th);
                     }
-
       
 
                     if (th.m_thread.ThreadState == ThreadState.Unstarted)
                     {
+
+						th.restEv.Set();
                         th.m_thread.Start();
                     }
                     else if (th.m_thread.ThreadState == ThreadState.WaitSleepJoin)

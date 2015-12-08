@@ -1,4 +1,4 @@
-//#define USE_COR
+#define USE_COR
 
 using UnityEngine;
 using System;
@@ -39,6 +39,7 @@ namespace Kubility
 		MiniTuple<string, HttpType, object> m_curRequest;
 
 #if USE_COR
+		public bool UseCor =true;
 		Task m_task;
 		WWWForm m_form;
 		Stream m_stream;
@@ -46,7 +47,7 @@ namespace Kubility
 
 
 #else
-
+		public bool UseCor =false;
         public readonly bool Unity = false;
 
 		MiniTuple<string, int, object> file;
@@ -197,8 +198,9 @@ namespace Kubility
             m_curRequest.field1 = HttpType.POST;
             m_SuccessEvent = callback;
 #if USE_COR
+			m_curRequest.field2  =m_SuccessEvent;
 			requestList.Push(m_curRequest);
-			m_task = new Task (UnityConnect (callback), AutoStart);
+			m_task = new Task (UnityConnect (), AutoStart);
 #else
             m_varUtils.field0 = 0;
             m_thread = KThread.StartTask(HttpThread, false);
@@ -214,8 +216,9 @@ namespace Kubility
             m_curRequest.field1 = HttpType.GET;
             this.m_SuccessEvent = callback;
 #if USE_COR
+			m_curRequest.field2  =m_SuccessEvent;
 			requestList.Push(m_curRequest);
-            m_task = new Task (UnityConnect (callback), AutoStart);
+            m_task = new Task (UnityConnect (), AutoStart);
 #else
             m_varUtils.field0 = 0;
             m_thread = KThread.StartTask(HttpThread, false);
@@ -229,8 +232,9 @@ namespace Kubility
 			m_curRequest.field0 = URL;
 			m_curRequest.field1 = HttpType.DOWNLOADFILE_TOMEMORY;
 #if USE_COR
+			m_curRequest.field2  =m_SuccessEvent;
 			requestList.Push(m_curRequest);
-            m_task = new Task (UnityConnect (callback), AutoStart);
+            m_task = new Task (UnityConnect (), AutoStart);
 #else
 			
 			this.onProcess = callback;
@@ -249,9 +253,10 @@ namespace Kubility
             m_curRequest.field0 = URL;
             m_curRequest.field1 = HttpType.DOWNLOADFILE;
 #if USE_COR
-			m_curRequest.field2 = Filepath;
+			m_curRequest.field0 = URL +";"+Filepath;
+			m_curRequest.field2 = callback;
 			requestList.Push(m_curRequest);
-            m_task = new Task (UnityConnect (callback), AutoStart);
+            m_task = new Task (UnityConnect (), AutoStart);
 #else
 
             this.onProcess = callback;
@@ -266,7 +271,7 @@ namespace Kubility
         }
 
 #if USE_COR
-		IEnumerator UnityConnect (object obj)
+		IEnumerator UnityConnect ()
 		{
 			if(requestList.Count == 0)
 			{
@@ -283,14 +288,14 @@ namespace Kubility
 			{
 				if (m_state == HttpType.GET || m_state == HttpType.POST)
 				{
-					Action<string> callback = (Action<string>)obj;
+					Action<string> callback = (Action<string>)request.field2;
 					if (callback != null)
 						callback (www.text);
 				} 
 				else if (m_state == HttpType.DOWNLOADFILE || m_state == HttpType.DOWNLOADFILE_TOMEMORY)
 				{
 
-					Action<byte[], float, bool> callback = (Action<byte[], float, bool>) obj ;
+					Action<byte[], float, bool> callback = (Action<byte[], float, bool>) request.field2 ;
 					if(callback != null)
 					{
 						callback(www.bytes,1f,true);
@@ -299,7 +304,7 @@ namespace Kubility
 
 					if(m_state == HttpType.DOWNLOADFILE)
 					{
-						var data = request.field2 as string;
+						var data = request.field0.Split(';')[1]; 
 
 						FileStream fs = new FileStream(data,FileMode.OpenOrCreate,FileAccess.ReadWrite);
 						fs.Write(www.bytes,0,www.bytes.Length);
@@ -402,6 +407,10 @@ namespace Kubility
             HttpWebResponse Response = null;
             Action postevent = delegate()
             {
+				if(req != null)
+				{
+					req.Abort();
+				}
 
 
                 if (curRequest.field1 == HttpType.POST)
@@ -433,23 +442,20 @@ namespace Kubility
                     req.Method = "GET";
                 }
 
-
-
-
-
-//                LogMgr.Log("发送请求");
+//				LogMgr.Log("HttpWebRequest -1");
 
                 using (Response = (HttpWebResponse)req.GetResponse())
                 {
-
+//					LogMgr.Log("HttpWebRequest -2");
                     var sr = new StreamReader(Response.GetResponseStream());
-
+//					LogMgr.Log("HttpWebRequest -3");
                     string responseContent = sr.ReadToEnd();
-
+//					LogMgr.Log("HttpWebRequest -4");
                     if (temp.field1 != null)
                     {
                         temp.field1(responseContent);
                     }
+//					LogMgr.Log("HttpWebRequest 5");
 //                    LogMgr.Log("收到请求");
                     trytimes = 0;
                     req.Abort();
@@ -462,6 +468,7 @@ namespace Kubility
 				try
 				{
 					postevent();
+//					LogMgr.Log("HttpWebRequest 6");
 				}
 				catch (Exception webEx)
 				{
@@ -793,7 +800,8 @@ namespace Kubility
 			} 
 			else 
 			{
-				www = new WWW (req.field0);
+
+				www = new WWW (req.field0.Split(';')[0]);
 			}
 
 			return www;

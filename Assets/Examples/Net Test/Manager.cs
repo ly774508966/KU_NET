@@ -106,7 +106,7 @@ public class Manager : MonoBehaviour
 			mess.msgID = 102;
 			var head = new StructMessageHead ();
 			head.CMD = 102;
-			head.bodyLen = (UInt32)Marshal.SizeOf (mess);
+			head.bodyLen = (int)Marshal.SizeOf (mess);
 
 			var message = StructMessage.Create (head, mess);
 

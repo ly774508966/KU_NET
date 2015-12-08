@@ -8,7 +8,6 @@ using System.Net;
 namespace Kubility
 {
 
-
 	/// <summary>
 	/// 本地数据缓冲类(as ADT)
 	/// </summary>

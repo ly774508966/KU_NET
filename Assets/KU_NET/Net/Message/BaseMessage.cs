@@ -1,4 +1,4 @@
-﻿
+﻿//#define Protobuf
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,8 +6,9 @@ using System;
 using System.Text;
 using System.IO;
 using System.Threading;
+#if Protobuf
 using ProtoBuf;
-
+#endif
 
 namespace Kubility
 {
@@ -28,21 +29,31 @@ namespace Kubility
     {
 
         protected NetByteBuffer _buffer;
-
-        
-
         /// <summary>
         /// unique ID
         /// </summary>
         protected MiniTuple<UInt32, int> _Version;
+		/// <summary>
+		/// 主版本号
+		/// </summary>
 
-        protected MiniTuple<UInt32, int> _CMD;
-
-        protected MiniTuple<UInt32, int> _bodyLen;
+        protected MiniTuple<Int16, int> _CMD;
+        ///<summary> 
+        ///子版本号
+        ///</summary>
+        protected MiniTuple<Int16, int> _subCmd;
+        ///<summary> 
+        ///包体长度
+        ///</summary>
+        protected MiniTuple<Int32, int> _bodyLen;
+        ///<summary> 
+        ///校验码
+        ///</summary>
+        protected MiniTuple<Int32, int> _code;
 
 //        protected MiniTuple<short, int> _Flag;
 
-        public UInt32 bodyLen
+        public Int32 bodyLen
         {
             get
             {
@@ -68,7 +79,7 @@ namespace Kubility
             }
         }
 
-        public UInt32 CMD
+        public Int16 CMD
         {
             get
             {
@@ -80,19 +91,32 @@ namespace Kubility
                 _CMD.field0 = value;
             }
         }
+        
+        public Int16 Sub_CMD
+        {
+            get
+            {
+                return _subCmd.field0;
+            }
 
-//        public short Flag
-//        {
-//            get
-//            {
-//                return _Flag.field0;
-//            }
-//
-//            protected set
-//            {
-//                _Flag.field0 = value;
-//            }
-//        }
+            set
+            {
+                _subCmd.field0 = value;
+            }
+        }
+        
+        public Int32 Code
+        {
+            get
+            {
+                return _code.field0;
+            }
+
+            set
+            {
+                _code.field0 = value;
+            }
+        }
 
         public NetByteBuffer buffer
         {
@@ -115,51 +139,50 @@ namespace Kubility
 
         public virtual void Reset()
         {
-            this._bodyLen = new MiniTuple<uint, int>();
-            this._bodyLen.field0 = 0;
-            this._bodyLen.field1 = 0;
-
-            this._CMD = new MiniTuple<uint, int>();
-            this._CMD.field0 = 0;
-            this._CMD.field1 = 0;
-
-//            this._Flag = new MiniTuple<short, int>();
-//            this._Flag.field0 = 0;
-//            this._Flag.field1 = 0;
-
+            this._bodyLen = new MiniTuple<int, int>();
+            this._CMD = new MiniTuple<short, int>();
+            this._subCmd = new MiniTuple<short,int>();
+            this._code = new MiniTuple<int,int>();
             this._Version = new MiniTuple<uint, int>();
-            this._Version.field0 = 0;
-            this._Version.field1 = 0;
 
             this.buffer.Clear();
         }
 
         public virtual void Read(Stream buffer)
         {
-            this._Version.field1 = ByteStream.readUInt32(buffer, out this._Version.field0);
+            // this._Version.field1 = ByteStream.readUInt32(buffer, out this._Version.field0);
 //            this._Flag.field1 = ByteStream.readShort16(buffer, out this._Flag.field0);
-            this._CMD.field1 = ByteStream.readUInt32(buffer, out this._CMD.field0);
-            this._bodyLen.field1 = ByteStream.readUInt32(buffer, out this._bodyLen.field0);
+            
+            this._bodyLen.field1 = ByteStream.readInt32(buffer, out this._bodyLen.field0);
+            this._CMD.field1 = ByteStream.readShort16(buffer, out this._CMD.field0);
+            this._subCmd.field1 = ByteStream.readShort16(buffer,out this._subCmd.field0);
+            this._code.field0 = ByteStream.readInt32(buffer,out this._code.field0);
 
         }
 
         public virtual void Read(byte[] bytes)
         {
             buffer = new NetByteBuffer(bytes);
-            Version = (UInt32)buffer;
+//            Version = (UInt32)buffer;
 //            Flag = (short)buffer;
-            CMD = (UInt32)buffer;
-            bodyLen = (UInt32)buffer;
+			bodyLen = (int)buffer;
+            CMD = (short)buffer;
+			Sub_CMD = (short)buffer;
+			Code =(int)buffer;
+           
         }
 
         public virtual byte[] Serialize()
         {
 
             NetByteBuffer by = new NetByteBuffer(MessageInfo.HeadLen);
-            by += Version;
+//            by += Version;
 //            by += Flag;
+			by += bodyLen;
             by += CMD;
-            by += bodyLen;
+			by += Sub_CMD;
+			by += Code;
+           
 
             return by.ConverToBytes();
         }

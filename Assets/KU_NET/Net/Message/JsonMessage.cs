@@ -84,7 +84,7 @@ namespace Kubility
 				
 				if (head != null && addHead)
 				{
-					head.bodyLen = (uint)bys.Length;
+					head.bodyLen = bys.Length;
 					buffer += head.Serialize();
 				}
 				
