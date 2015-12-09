@@ -14,14 +14,57 @@ namespace Kubility
 	/// </summary>
 	public class KTcpClient :AbstractNetUnit
 	{
-		public bool quit =false;
+
+		sealed class KTcpClientDelegateCls:SingleTon<KTcpClientDelegateCls>
+		{
+			public bool quit =false;
+			KThread m_SendThread;
+			KThread m_ReceiveThread;
+
+			ManualResetEvent mlock = new ManualResetEvent(false);
+
+
+			internal void StartThreadDelegate(VoidDelegate send,VoidDelegate receive)
+			{
+				if(m_SendThread == null)
+				{
+					m_SendThread =  KThread.StartTask(send);
+				}
+				
+				if(m_ReceiveThread == null)
+				{
+					m_ReceiveThread =KThread.StartTask(receive);
+				}
+
+				Resume();
+			}
+
+			internal void Pause()
+			{
+				mlock.Reset();
+			}
+
+			internal void Resume()
+			{
+				mlock.Set();
+			}
+
+			internal void Wait()
+			{
+				mlock.WaitOne();
+			}
+
+			internal void Close()
+			{
+				quit =true;
+			}
+
+		
+		}
 
 		AsyncSocket _socket;
-		KThread m_SendThread;
-		KThread m_ReceiveThread;
-		IPEndPoint ipend ;
 
-		ManualResetEvent mlock = new ManualResetEvent(false);
+		IPEndPoint ipend ;
 
 		#region public Interface
 		/// <summary>
@@ -55,7 +98,7 @@ namespace Kubility
 		{
 			if(message != null)
 			{
-				MessageManager.mIns.GetSendQueue().Push_Back(message);
+				MessageManager.mIns.GetSendQueue().Push_Back(message,this._socket,MessageManager.MessageOperation.Operation_send);
 			}
 			else
 			{
@@ -68,7 +111,7 @@ namespace Kubility
 		{
 			if(message != null)
 			{
-				MessageManager.mIns.GetSendQueue().Push_Back(message);
+				MessageManager.mIns.GetSendQueue().Push_Back(message,_socket,MessageManager.MessageOperation.Operation_send);
 				message.Wait_Deserialize<T>(callback);
 			}
 			else
@@ -82,27 +125,102 @@ namespace Kubility
 		{
 			_socket.Reconnect((bool value)=>
 			{
-//				LogMgr.LogError("Reconnect callback  "+ value );
 				if(value)
 				{
-					mlock.Set();
+
+					MessageManager.mIns.GetReceiveQueue().Push_Back(null,this._socket,MessageManager.MessageOperation.Operation_receive);
+					
+					KTcpClientDelegateCls.mIns.Resume();
 				}
 			});
 		}
-		
-		public void Close()
+
+		public void CloseConnect()
 		{
-			quit= true;
-			mlock.Set();
+			_socket.CloseConnect();
+		}
+		
+		public void Close(bool all =true)
+		{
+			if(all)
+			{
+				KTcpClientDelegateCls.mIns.Close();
+			}
 			SocketAsyncEventArgsPool.mIns.Close();
 		}
 
-		public AsyncSocket GetSocket()
-		{
-			return _socket;
-		}
-
 		#endregion
+
+		void ThreadSendMessage()
+		{
+			while(!KTcpClientDelegateCls.mIns.quit )
+			{
+				
+				if(MessageManager.mIns.GetSendQueue().Size >0)
+				{
+					BaseMessage message;
+					AsyncSocket msocket;
+					if(MessageManager.mIns.GetSendQueue().Pop_First(out message,out msocket))
+					{
+						
+						SocketAsyncEventArgsPool.mIns.Pop_FreeForSend(msocket, delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
+						{
+							if(!retCode)
+							{
+								_socketEvargs.RemoteEndPoint = _socket.GetRemoteIP();
+								
+								_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
+							}
+//							LogMgr.Log("sender >>");
+
+							
+							byte[] bys =message.Serialize();
+							_socketEvargs.SetBuffer(bys,0,bys.Length);
+							msocket.SendAsync(_socketEvargs,SendCallback);
+							
+						});
+						
+					}
+					
+				}
+			}
+		}
+		
+		void ThreadReceiveMessage()
+		{
+			while(!KTcpClientDelegateCls.mIns.quit )
+			{
+				
+				BaseMessage message;
+				AsyncSocket msocket;
+
+				if(MessageManager.mIns.GetReceiveQueue().Pop_First(out message,out msocket))
+				{
+
+					SocketAsyncEventArgsPool.mIns.Pop_FreeForReceive(msocket, delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
+					{
+						
+						if(!retCode)
+						{
+							_socketEvargs.RemoteEndPoint = msocket.GetRemoteIP();
+							_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
+						}
+
+//						LogMgr.Log("Pop_FreeForReceive  laststate = "+ msocket.GetSocketState() +" retCode ="+retCode );
+						
+						msocket.ReceiveAsync(_socketEvargs,ReveiveCallBack);
+						
+						
+					});
+				}
+				else
+				{
+
+					KTcpClientDelegateCls.mIns.Pause();
+					KTcpClientDelegateCls.mIns.Wait();
+				}
+			}
+		}
 
 		void startConnect(AsyncSocket psocket, SocketAsyncEventArgs ev)
 		{
@@ -123,99 +241,18 @@ namespace Kubility
 
 		void ConnectCallback(SocketAsyncEventArgs args)
 		{
-			if(m_SendThread == null)
-			{
-				m_SendThread =  KThread.StartTask(ThreadSendMessage);
-			}
-			
-			if(m_ReceiveThread == null)
-			{
-				m_ReceiveThread =KThread.StartTask(ThreadReceiveMessage);
-			}
-			else
-			{
-				mlock.Set();
-			}
+			MessageManager.mIns.GetReceiveQueue().Push_Back(null,this._socket,MessageManager.MessageOperation.Operation_receive);
+			KTcpClientDelegateCls.mIns.StartThreadDelegate(ThreadSendMessage,ThreadReceiveMessage);
+
 		}
-		
-		void ThreadSendMessage()
-		{
-			while(!quit )
-			{
-
-				if(MessageManager.mIns.GetSendQueue().Size >0)
-				{
-
-					BaseMessage message;
-					MessageManager.mIns.GetSendQueue().Pop_First(out message);
-					if(message != null)
-					{
-
-						SocketAsyncEventArgsPool.mIns.Pop_FreeForSend(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
-						{
-							//LogMgr.Log("Pop_FreeForSend  laststate = "+ _socket.GetSocketState());
-
-							if(!retCode)
-							{
-								_socketEvargs.RemoteEndPoint = _socket.GetRemoteIP();
-								_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
-							}
-
-							byte[] bys =message.Serialize();
-							_socketEvargs.SetBuffer(bys,0,bys.Length);
-							_socket.SendAsync(_socketEvargs,SendCallback);
-	
-						});
-
-					}
-					
-				}
-			}
-		}
-
-		void ThreadReceiveMessage()
-		{
-			while(!quit )
-			{
-
-				mlock.Reset();
-
-				if(SocketAviliable())
-				{
-					SocketAsyncEventArgsPool.mIns.Pop_FreeForReceive(delegate(SocketAsyncEventArgs _socketEvargs,bool retCode) 
-					{
-
-						if(!retCode)
-						{
-							_socketEvargs.RemoteEndPoint = _socket.GetRemoteIP();
-							_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
-						}
-//						LogMgr.Log("Pop_FreeForReceive  laststate = "+ _socket.GetSocketState() +" retCode ="+retCode );
-
-						_socket.ReceiveAsync(_socketEvargs,ReveiveCallBack);
-
-
-					});
-					mlock.WaitOne();
-				}
-			}
-
-			
-		}
-
 
 		void AcceptEventArg_OnConnectCompleted(object obj,SocketAsyncEventArgs ev)
 		{
 			Socket socket = obj as Socket;
 
-			if(socket == null && !socket.Connected && !quit)
+			if(socket == null && !socket.Connected )
 			{
 				AsyncSocket.Create(socket,this.ipend).TryConnect(ev,ConnectCallback);
-				return;
-			}
-			else if(quit)
-			{
-				//may do something
 				return;
 			}
 
@@ -230,7 +267,7 @@ namespace Kubility
 				ev.AcceptSocket = null;
 			}
 
-//			LogMgr.LogError("LastOperation = "+ ev.LastOperation.ToString());
+//			LogUtils.LogFullInfo("LastOperation = "+ ev.LastOperation.ToString());
 			if(ev.LastOperation == SocketAsyncOperation.Connect)
 			{
 				ConnectCallback(ev);
@@ -238,6 +275,9 @@ namespace Kubility
 			}
 			else if(ev.LastOperation == SocketAsyncOperation.Receive)
 			{
+				MessageManager.mIns.GetReceiveQueue().Push_Back(null,this._socket,MessageManager.MessageOperation.Operation_receive);
+				
+				KTcpClientDelegateCls.mIns.Resume();
 				if(ev.BytesTransferred >0 )
 				{
 					ReveiveCallBack(ev);
@@ -262,7 +302,6 @@ namespace Kubility
 
 		void ReveiveCallBack(SocketAsyncEventArgs ev)
 		{
-
 			if(ev.BytesTransferred >0)
 			{
 				LogMgr.Log("ReveiveCallBack bytes size = "+ ev.BytesTransferred  +" ev.SocketError = "+ ev.SocketError);
@@ -275,7 +314,7 @@ namespace Kubility
 				}
 			}
 
-			mlock.Set();
+
 
 		}
 
@@ -296,7 +335,3 @@ namespace Kubility
 	}
 
 }
-
-
-
-

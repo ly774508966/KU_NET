@@ -59,6 +59,7 @@ namespace Kubility
             /// 1 = send  2 =recevied
             /// </summary>
             public short flag;
+			public AsyncSocket target;
             public Action<SocketAsyncEventArgs, bool> ev;
         }
 
@@ -104,19 +105,17 @@ namespace Kubility
                     lock (cmdList)
                     {
                         cmdList.Push(cmd);
-                        Resume();
+                       
                     }
+					Resume();
                 }
             }
 
             void PoolThread(object obj)
             {
-                SocketAsyncEventArgsPool target = (SocketAsyncEventArgsPool)obj;
+                SocketAsyncEventArgsPool argsPool = (SocketAsyncEventArgsPool)obj;
                 while (quit == 0)
                 {
-
-                    m_lock.WaitOne();
-                    //may some bug
                     while (cmdList.Count > 0)
                     {
                         PoolCMD cmd = cmdList.Pop();
@@ -124,46 +123,51 @@ namespace Kubility
                         float DelayTime = cmd.delayTime;
                         bool found = false;
                         Action<SocketAsyncEventArgs, bool> cmdEv = cmd.ev;
+
                         if (cmdEv != null)
                         {
+
                             int tryTimes = 0;
-                            while (!found && tryTimes < 10)
+                            while (!found && tryTimes < 4)
                             {
-                                for (int i = 0; i < target.Pool.Count; ++i)
-                                {
-                                    SocketEventArgsExtern sub = target.Pool[i];
-                                    AsyncSocket socket = sub.m_connectSocket;
-									var state = socket.GetSocketState();
-                                    if (socket != null 
+
+								SocketEventArgsExtern arg = argsPool.Pool.Find(p => p.m_connectSocket.Equals(cmd.target));
+
+								if(arg != null)
+								{
+	
+									AsyncSocket.SocketArgsStats state = cmd.target.GetSocketState();
+									if (cmd != null && cmd.target != null 
 									    && state != AsyncSocket.SocketArgsStats.UNCONNECT
 									    && state != AsyncSocket.SocketArgsStats.ERROR
 									    && state != AsyncSocket.SocketArgsStats.READY)
-                                    {
-                                        found = true;
-                                        if (cmd.flag == 1)//send
-                                        {
-                                            cmdEv(sub.m_SendArgs, found);
-                                        }
-                                        else if (cmd.flag == 2)//receiced
-                                        {
-                                            cmdEv(sub.m_ReceiveArgs, found);
-                                        }
+									{
+										found = true;
+	
+										if (cmd.flag == 1)//send
+										{
+											cmdEv(arg.m_SendArgs, found);
+										}
+										else if (cmd.flag == 2)//receiced
+										{
+											cmdEv(arg.m_ReceiveArgs, found);
+										}
 										else if (cmd.flag ==3)
 										{
-											cmdEv(new SocketAsyncEventArgs(), found);
+											cmdEv(new SocketAsyncEventArgs(), false);
 										}
-                                        else
-                                        {
-                                            LogMgr.LogError("cmd Error");
-                                            found = false;
-                                        }
+										else
+										{
+											LogUtils.LogFullInfo("Cmd Error",LogType.ERROR);
+											found = false;
+										}
+									}
 
-                                        break;
-                                    }
-                                }
 
-                                tryTimes++;
-                            }
+								}
+
+								tryTimes++;
+							}
 
                             if (DelayTime > 0.001f)
                             {
@@ -196,6 +200,7 @@ namespace Kubility
                     }
 
                     Pause();
+					m_lock.WaitOne();
                 }
 
 //                LogMgr.Log("PoolThread is Done  = " + quit.ToString());
@@ -248,36 +253,39 @@ namespace Kubility
 
         }
 
-		public void Pop_FreeForOther(Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
+		public void Pop_FreeForOther(AsyncSocket _socket, Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
 		{
 			
 			PoolCMD cmd = new PoolCMD();
 			cmd.delayTime = delayTime;
 			cmd.flag = 3;
 			cmd.ev = ev;
-			
+			cmd.target = _socket;
+
 			m_tools.PushCmd(cmd);
 			
 		}
 
-        public void Pop_FreeForSend(Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
+		public void Pop_FreeForSend(AsyncSocket _socket,Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
         {
 
             PoolCMD cmd = new PoolCMD();
             cmd.delayTime = delayTime;
             cmd.flag = 1;
             cmd.ev = ev;
+			cmd.target = _socket;
 
             m_tools.PushCmd(cmd);
 
         }
 
-        public void Pop_FreeForReceive(Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
+		public void Pop_FreeForReceive(AsyncSocket _socket,Action<SocketAsyncEventArgs, bool> ev, float delayTime = 0f)
         {
             PoolCMD cmd = new PoolCMD();
             cmd.delayTime = delayTime;
             cmd.flag = 2;
             cmd.ev = ev;
+			cmd.target = _socket;
             m_tools.PushCmd(cmd);
         }
 

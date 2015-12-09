@@ -28,7 +28,10 @@ public class Manager : MonoBehaviour
 {
 	
 	KTcpClient client;
+	KTcpClient client1;
+	KTcpClient client2;
 	KTcpServer server;
+
 
 
 	bool isDone = false;
@@ -55,8 +58,13 @@ public class Manager : MonoBehaviour
 		http = new HttpClient ();
 		KThread.StartTask (ThreadListener);
 
-		client = new KTcpClient ();
-		client.Init ("127.0.0.1", 11000);
+		client1 = new KTcpClient ();
+		client1.Init ("127.0.0.1", 11000);
+
+
+		client = client1;
+		client2 = new KTcpClient();
+		client2.Init("127.0.0.1",11001);
 	}
 
 
@@ -64,6 +72,10 @@ public class Manager : MonoBehaviour
 	{
 		AsynchronousSocketListener.StartListening ();
 	}
+
+	static int couter =0;
+
+	static int rc =0;
 
 	void OnGUI ()
 	{
@@ -73,6 +85,19 @@ public class Manager : MonoBehaviour
 		GUILayout.Label ("state = " + isDone, GUILayout.Width (150));
 		GUILayout.Label ("HttpDownload :" , GUILayout.Width (150));
 		GUILayout.Label ("Socket : " , GUILayout.Width (150));
+		GUILayout.Label("counter : "+couter +" rc ="+ rc,GUILayout.Width (150));
+
+		if(GUILayout.Button("switch"))
+		{
+			if(client1 == client)
+			{
+				client = client2;
+			}
+			else
+			{
+				client = client1;
+			}
+		}
 
 		GUILayout.BeginHorizontal();
 		if (GUILayout.Button ("Pause", GUILayout.Width (150))) {
@@ -81,9 +106,8 @@ public class Manager : MonoBehaviour
 
 		if(GUILayout.Button("Close Socket",GUILayout.Width(150)))
 		{
-			AsyncSocket asocket = client.GetSocket();
 
-			asocket.CloseConnect();
+			client.CloseConnect();
 		}
 
 		GUILayout.EndHorizontal();
@@ -112,8 +136,11 @@ public class Manager : MonoBehaviour
 
 			client.Send<HeartBeatStructData> (message, delegate(HeartBeatStructData obj) {
 				LogMgr.Log ("Struct Message Callback");
+				rc++;
 				KTool.Dump (obj);
 			});
+
+			couter++;
 		}
 
 		if (GUILayout.Button ("Send Json Message", GUILayout.Width (150)))
@@ -219,7 +246,6 @@ public class Manager : MonoBehaviour
 		AsynchronousSocketListener.stop = true;
 
 		if (client != null) {
-			client.quit = true;
 			client.Close ();
 		}
 

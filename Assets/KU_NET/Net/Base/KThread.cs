@@ -72,7 +72,7 @@ namespace Kubility
 #if SHOW_LOG
             LogMgr.Log("Thread OnDestory");
 #endif
-
+//			LogMgr.Log("destroy  UID ="+ GetUID());
             this.VoidEv = null;
             this.SEv = null;
 
@@ -104,12 +104,29 @@ namespace Kubility
             {
                 m_thread = new Thread(new ThreadStart(ThreadEvents));
                 m_thread.Name = counter.ToString();
-                counter++;
+				Interlocked.Increment(ref counter);
 				restEv= new AutoResetEvent(false);
             }
 
 
         }
+
+		public int GetUID()
+		{
+			if(m_thread != null)
+			{
+				int value ;
+				if(int.TryParse (m_thread.Name, out value ))
+				{
+					return value;
+				}
+				return -1;
+			}
+			else
+			{
+				return -1;
+			}
+		}
 
         public static KThread StartTask(VoidDelegate vev, bool autoStart = true)
         {
@@ -155,21 +172,30 @@ namespace Kubility
 
                 OnDestroy();
             }
-            catch (ThreadAbortException abortEx)
-            {
-                if(RaiseAbortException)
-                {
-                    LogMgr.LogError("ThreadAbortException Error = " + abortEx.ToString());
-                }
-            }
             catch (Exception ex)
             {
-                LogMgr.LogError("ThreadEvents Error = " + ex.ToString());
+#if SHOW_LOG
+				if(ex is ThreadAbortException && RaiseAbortException)
+				{
+					LogMgr.LogError("ThreadAbortException Error >>= " + ex.ToString());
+				}
+				else
+                	LogMgr.LogError("ThreadEvents Error >> = " + ex.ToString());
+#endif
 
             }
             finally
             {
-                KThreadPool.mIns.Remove(this);
+                if ( KThreadPool.mIns.Remove(this))
+				{
+					OnDestroy();
+				}
+
+				if(VoidEv != null)
+				{
+					KThread.StartTask(VoidEv);
+				}
+
             }
 
         }
@@ -264,7 +290,7 @@ namespace Kubility
 					restEv.Set();
 				}
                 
-               
+
             }
 			else
 			{
@@ -340,7 +366,12 @@ namespace Kubility
             {
 
                 _stop = true;
-                TaskQueue.Clear();
+//				lock(m_lock)
+//				{
+//					if(TaskQueue.Count >0)
+//						TaskQueue.Clear();
+//				}
+
 
 				lock(m_lock)
 				{
@@ -413,14 +444,18 @@ namespace Kubility
                 }
             }
 
-            public void Remove(KThread th)
+            public bool Remove(KThread th)
             {
+				bool ret1 =false;
+				bool ret2 =false;
                 lock (m_lock)
                 {
-                    WorkQueue.Remove(th);
-                    WaitQueue.Remove(th);
+
+					ret1 =WorkQueue.Remove(th);
+					ret2 =WaitQueue.Remove(th);
 //					th.OnDestroy();
                 }
+				return ret2 || ret1;
             }
             
             public void Push_Task(VoidDelegate vev, bool autoStart, Action<KThread> callback = null)

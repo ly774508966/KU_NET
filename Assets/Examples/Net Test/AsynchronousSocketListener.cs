@@ -47,7 +47,7 @@ public class AsynchronousSocketListener
 		}
 		catch (Exception e)
 		{
-			LogMgr.LogError(e);
+			LogMgr.LogError("StartListening  >>" +e);
 		}
 
 	}

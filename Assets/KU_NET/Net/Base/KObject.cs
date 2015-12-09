@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 //#define SHOW_LOG
+//#define DEBUG
 #endif
 using UnityEngine;
 using System;
@@ -32,7 +33,9 @@ namespace Kubility
 
 	public class KObject:KObjectInterface
 	{
-//		static List<object> objlist  = new List<object>();
+#if DEBUG 
+		static List<object> objlist  = new List<object>();
+#endif
 		static int count;
 				
 		protected bool _isRunning;
@@ -46,22 +49,30 @@ namespace Kubility
 		protected KObject ()
 		{
 			count++;
-//			objlist.Add(this);
-
+#if DEBUG
+			objlist.Add(this);
+#endif
 		}
 
 		public static void Dump ()
 		{
 			LogMgr.Log ("Object count left =" + count.ToString ());
+#if	DEBUG
+			foreach(var sub in objlist)
+			{
+				KThread th = sub as KThread;
+				if(th != null)
+					LogMgr.Log(th.GetUID());
+				else
+					LogMgr.Log(sub.GetType());
 
-//			foreach(var sub in objlist)
-//			{
-//				LogMgr.Log(sub.GetType());
-//			}
+			}
+#endif
 		}
 
 		public virtual void OnCreate ()
 		{
+			LogMgr.Log("cr >> "+ this.GetType());
 			#if SHOW_LOG
 			LogMgr.Log (this.ToString () + " OnCreate");
 			#endif
@@ -89,7 +100,9 @@ namespace Kubility
 			#if SHOW_LOG
 			LogMgr.Log (this.ToString () + " OnDestroy");
 			#endif
-
+#if DEBUG
+			objlist.Remove(this);
+#endif
 			count--;
 
 		}
