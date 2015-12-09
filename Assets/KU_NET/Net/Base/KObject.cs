@@ -58,15 +58,16 @@ namespace Kubility
 		{
 			LogMgr.Log ("Object count left =" + count.ToString ());
 #if	DEBUG
-			foreach(var sub in objlist)
+
+			for(int i=0; i < objlist.Count;++i)
 			{
-				KThread th = sub as KThread;
+				KThread th = objlist[i] as KThread;
 				if(th != null)
 					LogMgr.Log(th.GetUID());
 				else
-					LogMgr.Log(sub.GetType());
-
+					LogMgr.Log(objlist[i].GetType());
 			}
+
 #endif
 		}
 

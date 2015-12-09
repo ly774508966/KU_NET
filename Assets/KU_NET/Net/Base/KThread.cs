@@ -324,7 +324,7 @@ namespace Kubility
         {
 
             LinkedList<KThread> WorkQueue = new LinkedList<KThread>();
-            LinkedList<VoidDelegate> TaskQueue = new LinkedList<VoidDelegate>();
+			Stack<VoidDelegate> TaskQueue = new Stack<VoidDelegate>();
             LinkedList<KThread> WaitQueue = new LinkedList<KThread>();
             bool _stop = false;
 
@@ -460,7 +460,7 @@ namespace Kubility
             
             public void Push_Task(VoidDelegate vev, bool autoStart, Action<KThread> callback = null)
             {
-                TaskQueue.AddLast(vev);
+                TaskQueue.Push(vev);
 
                 if (callback != null)
                 {
@@ -487,7 +487,7 @@ namespace Kubility
             public VoidDelegate GetFirstTask()
             {
                 if (TaskQueue.Count > 0)
-                    return TaskQueue.First.Value;
+                    return TaskQueue.Peek();
                 else
                     return null;
             }
@@ -497,7 +497,7 @@ namespace Kubility
                 if (_stop || vev == null)
                     return;
 
-                TaskQueue.RemoveFirst();
+                TaskQueue.Pop();
 
                 if (WaitQueue.Count > 0)
                 {

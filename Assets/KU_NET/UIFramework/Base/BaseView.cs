@@ -90,12 +90,12 @@ namespace Kubility
 
 			view.TargetGameObject = value.gameObject;
 
-			if (oldview.AutoPos) {
+			if (oldview!= null && oldview.AutoPos) {
 				view.AutoPos = oldview.AutoPos;
 				view.Pos = oldview.Pos;
 			}
 
-			if (trans == null && oldview._Trans != null) {
+			if (trans == null && oldview!= null && oldview._Trans != null) {
 				view.Trans = oldview._Trans;
 			} else if (trans != null) {
 				view.Trans = trans;

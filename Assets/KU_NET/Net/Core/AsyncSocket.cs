@@ -126,10 +126,10 @@ namespace Kubility
 					
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -183,10 +183,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -214,10 +214,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -244,10 +244,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -275,10 +275,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -305,10 +305,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -336,10 +336,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -366,10 +366,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -396,10 +396,10 @@ namespace Kubility
 					}
 					return true;
 				} else {
-					if(m_socket == null)
+					if (m_socket == null)
 						LogMgr.LogError ("  Socket Is Null ");
 					else
-						LogMgr.LogError ("  Socket Error >> Connected =" +m_socket.Connected +" >> May shutdown");
+						LogMgr.LogError ("  Socket Error >> Connected =" + m_socket.Connected + " >> May shutdown");
 					m_state = SocketArgsStats.ERROR;
 					return false;
 				}
@@ -412,50 +412,63 @@ namespace Kubility
 			
 		}
 		
-		public void Reconnect (Action<bool> callback = null)
+		public void Reconnect (Action<bool> callback = null,bool force =false)
 		{
-			
-			try {
-				//				LogMgr.Log("cur Connected = "+m_socket.Connected );
-				if (times > Config.mIns.Retry_Times) {
-					LogMgr.LogError ("Reconnect Failed ");
-					CloseConnect ();
-					if (callback != null) {
-						callback (false);
-					}
-				} else if (m_socket != null  && !m_socket.Connected && m_InitData.RemoteEndPoint != null) {
+
+			if(m_socket != null && !m_socket.Connected && times > Config.mIns.Retry_Times && !force)
+			{
+				LogMgr.Log("重连失败次数过多，请使用强制重连");
+			}
+			else
+			{
+				times =0;
+			}
+
+			if (m_socket != null 
+			    && m_state == SocketArgsStats.UNCONNECT || m_state == SocketArgsStats.ERROR 
+			    && !m_socket.Connected 
+			    && m_InitData.RemoteEndPoint != null) 
+			{
+				LogMgr.Log ("state =" + m_state);
+				Action ReconnectWork;
+
+				ReconnectWork =delegate() 
+				{
 					m_socket = new Socket (m_InitData.addressFamily, m_InitData.socketType, m_InitData.protocolTtype);
-					
 					m_socket.BeginConnect (m_InitData.RemoteEndPoint, (IAsyncResult iar) =>
-					                       {
+					{
 						Socket handler = (Socket)iar.AsyncState;
-						try {
-							handler.EndConnect (iar);
-							times = 0;
-							m_state = SocketArgsStats.CONNECTING;
-							if (callback != null) {
-								callback (true);
-							}
-						} catch (Exception e) {
-							times++;
-							Reconnect ();
-							LogMgr.LogError (e);
+						handler.EndConnect (iar);
+						times = 0;
+						m_state = SocketArgsStats.CONNECTING;
+						if (callback != null) {
+							callback (true);
 						}
 					}, m_socket);
-				} else {
-					if (callback != null) {
-						callback (false);
-					}
+				};
+
+				try {
+
+					ReconnectWork();
+
+				} catch (Exception ex) {
+					times++;
+					LogMgr.LogError("rc error times ="+ times);
+						
+					if (times > Config.mIns.Retry_Times) {
+						LogMgr.LogError ("Reconnect Failed " + ex);
+						CloseConnect ();
+					} 
+					else 
+						ReconnectWork ();
+
 				}
+			} 
+			else 
+			{
+				LogMgr.Log (" false state >> =" + m_state);
+				if (callback != null) callback (false);
 				
-			} catch (Exception ex) {
-				times++;
-				
-				if (times > Config.mIns.Retry_Times) {
-					LogMgr.LogError ("Reconnect Failed " + ex);
-					CloseConnect ();
-				} else
-					Reconnect ();
 			}
 		}
 		

@@ -29,42 +29,42 @@ namespace Kubility
         public override void OnCreateTrans()
         {
             base.OnCreateTrans();
-            if (!gobj.activeSelf)
+			if (gobj != null &&!gobj.activeSelf)
                 gobj.SetActive(true);
         }
 
         public override void OnEnterTrans()
         {
             base.OnEnterTrans();
-            if (!gobj.activeSelf)
+			if (gobj != null &&!gobj.activeSelf)
                 gobj.SetActive(true);
         }
 
         public override void OnExitTrans()
         {
             base.OnExitTrans();
-            if (gobj.activeSelf)
+			if (gobj != null &&gobj.activeSelf)
                 gobj.SetActive(false);
         }
 
         public override void OnDestroyTrans()
         {
             base.OnDestroyTrans();
-            if (gobj.activeSelf)
+			if (gobj != null && gobj.activeSelf)
                 gobj.SetActive(false);
         }
 
         public override void OnPauseTrans()
         {
             base.OnPauseTrans();
-            if (gobj.activeSelf)
+			if (gobj != null &&gobj.activeSelf)
                 gobj.SetActive(false);
         }
 
         public override void OnResumeTrans()
         {
             base.OnResumeTrans();
-            if (!gobj.activeSelf)
+			if (gobj != null &&!gobj.activeSelf)
                 gobj.SetActive(true);
         }
 

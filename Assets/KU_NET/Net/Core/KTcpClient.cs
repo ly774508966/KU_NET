@@ -121,7 +121,7 @@ namespace Kubility
 
 		}
 
-		public void Reconnect()
+		public void Reconnect(bool force =false)
 		{
 			_socket.Reconnect((bool value)=>
 			{
@@ -132,7 +132,7 @@ namespace Kubility
 					
 					KTcpClientDelegateCls.mIns.Resume();
 				}
-			});
+			},force);
 		}
 
 		public void CloseConnect()
@@ -206,7 +206,7 @@ namespace Kubility
 							_socketEvargs.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_OnConnectCompleted); 
 						}
 
-//						LogMgr.Log("Pop_FreeForReceive  laststate = "+ msocket.GetSocketState() +" retCode ="+retCode );
+						LogMgr.Log("Pop_FreeForReceive  laststate = "+ msocket.GetSocketState() +" retCode ="+retCode );
 						
 						msocket.ReceiveAsync(_socketEvargs,ReveiveCallBack);
 						

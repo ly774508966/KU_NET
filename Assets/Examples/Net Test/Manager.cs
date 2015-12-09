@@ -28,8 +28,6 @@ public class Manager : MonoBehaviour
 {
 	
 	KTcpClient client;
-	KTcpClient client1;
-	KTcpClient client2;
 	KTcpServer server;
 
 
@@ -58,13 +56,9 @@ public class Manager : MonoBehaviour
 		http = new HttpClient ();
 		KThread.StartTask (ThreadListener);
 
-		client1 = new KTcpClient ();
-		client1.Init ("127.0.0.1", 11000);
+		client = new KTcpClient ();
+		client.Init ("127.0.0.1", 11000);
 
-
-		client = client1;
-		client2 = new KTcpClient();
-		client2.Init("127.0.0.1",11001);
 	}
 
 
@@ -85,19 +79,8 @@ public class Manager : MonoBehaviour
 		GUILayout.Label ("state = " + isDone, GUILayout.Width (150));
 		GUILayout.Label ("HttpDownload :" , GUILayout.Width (150));
 		GUILayout.Label ("Socket : " , GUILayout.Width (150));
-		GUILayout.Label("counter : "+couter +" rc ="+ rc,GUILayout.Width (150));
+		GUILayout.Label("发送数据包数量 : "+couter +" 成功接受数据包数量 ="+ rc,GUILayout.Width (150));
 
-		if(GUILayout.Button("switch"))
-		{
-			if(client1 == client)
-			{
-				client = client2;
-			}
-			else
-			{
-				client = client1;
-			}
-		}
 
 		GUILayout.BeginHorizontal();
 		if (GUILayout.Button ("Pause", GUILayout.Width (150))) {
@@ -154,9 +137,11 @@ public class Manager : MonoBehaviour
 			var jsonMessage = JsonMessage.Create<StructTest> (test, Jsonhead);
 			client.Send<StructTest> (jsonMessage, delegate(StructTest obj) {
 				LogMgr.Log ("Json Message Callback");
+				rc++;
 				KTool.Dump (obj);
 				
 			});
+			couter++;
 
 
 		}
@@ -211,8 +196,11 @@ public class Manager : MonoBehaviour
 
 			client.Send<KprotobufMessage>(ProbufMessage,delegate(KprotobufMessage obj) {
 				LogMgr.Log ("Protobuf Message Callback");
+				rc++;
 				LogMgr.Log(obj);
 			});
+
+			couter++;
 
 			
 		}
