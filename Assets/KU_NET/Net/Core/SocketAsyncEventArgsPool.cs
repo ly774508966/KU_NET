@@ -17,14 +17,7 @@ namespace Kubility
 		List<SocketEventArgsExtern> Pool;
 
 		SocketAsyncEventArgsPoolTools m_tools;
-		//		/// <summary>
-		//		/// The send queue.
-		//		/// </summary>
-		//		LinkedList<SocketAsyncEventArgs> SendQueue = new LinkedList<SocketAsyncEventArgs>();
-		//		/// <summary>
-		//		/// The receive queue.
-		//		/// </summary>
-		//		LinkedList<SocketAsyncEventArgs> ReceiveQueue = new LinkedList<SocketAsyncEventArgs>();
+
 
 		public SocketAsyncEventArgsPool ()
 		{
@@ -79,6 +72,7 @@ namespace Kubility
 
 			void CmdPoolWork ()
 			{
+				//will chage in the future
 				while (cmdList.Count > 0) {
 					PoolCMD cmd = cmdList.Pop ();
 					bool found = false;
