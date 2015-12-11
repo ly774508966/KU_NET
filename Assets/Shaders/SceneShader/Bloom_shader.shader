@@ -6,10 +6,12 @@
 		_BumpTex("_BumpTex",2D) =""{}
 		_specMap("_specMap",2D) =""{}
 		_Shininess ("_Shininess", Range(0, 10)) = 5
-		_SpecularIntensity("SpecularIntensity",Range(0.1,10)) = 2
-		_Bloom("bx",Range(0,5)) =1
+		_SpecularIntensity("SpecularIntensity",Range(0.1,50)) = 2
+		_Bloom("bx",Range(0,10)) =1
+		_TextureSize ("贴图大小",Range(128,512)) = 512
+		_BlurPower("_BlurPower",Range(0,3)) =0.214
 	}
-	///will be add HDR
+
 	SubShader
 	{
 		LOD 100
@@ -21,7 +23,9 @@
 			Lighting off
 			ColorMask RGB
 			AlphaTest  off
-			Cull back
+			// ZTest Always 
+			Cull Off 
+			// ZWrite Off
 			Fog { Mode off} 
 
 			CGPROGRAM
@@ -46,18 +50,18 @@
 			};
 
 			sampler2D _MainTex;
-			float4 _MainTex_ST;
+			fixed4 _MainTex_ST;
 
 			sampler2D  _BumpTex;
 			sampler2D  _specMap;
 
-			float _Shininess;
-			float _SpecularIntensity;
-			float _Bloom;
+			half _Shininess;
+			half _SpecularIntensity;
+			half _Bloom;
+			half _TextureSize;
+			half _BlurPower;
 
-			const float texDimension = 512.0;
- 			const float texScaler =  1.0/texDimension;
- 			const float texOffset = -0.5/texDimension;
+
 			
 			v2f vert ( appdata_full  v)
 			{
@@ -82,38 +86,40 @@
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
+				half texScaler =  1.0/_TextureSize;
+ 				half texOffset = -0.5/_TextureSize;
 				// sample the texture
 				fixed4 col = tex2D(_MainTex, i.uv);
 
-				float3 n_lightDirInTangent = - normalize(i.lightDirInTangent);
-				float3 n_viewDirInTangent = normalize(i.viewDirInTangent);
+				fixed3 n_lightDirInTangent = - normalize(i.lightDirInTangent);
+				fixed3 n_viewDirInTangent = normalize(i.viewDirInTangent);
 
-				float3 bump = normalize(tex2D(_BumpTex,i.uv).xyz *2 -1);
+				fixed3 bump = normalize(tex2D(_BumpTex,i.uv).xyz *2 -1);
 
-				float lighting = dot(bump,n_lightDirInTangent);
-				float blighting = n_lightDirInTangent.z;
+				fixed lighting = dot(bump,n_lightDirInTangent);
+				fixed blighting = n_lightDirInTangent.z;
 
 
-				float specular = dot(-reflect(n_lightDirInTangent,bump),n_viewDirInTangent);
+				fixed specular = dot(-reflect(n_lightDirInTangent,bump),n_viewDirInTangent);
 
-				float4 specColor = tex2D(_specMap,i.uv);
+				fixed4 specColor = tex2D(_specMap,i.uv);
 
-				float gauss0 = 1.0/32.0;
-			    float gauss1 = 5.0/32.0;
-			    float gauss2 =15.0/32.0;
-			    float gauss3 =22.0/32.0;
-			    float gauss4 =15.0/32.0;
-			    float gauss5 = 5.0/32.0;
-			    float gauss6 = 1.0/32.0; 
+				half gauss0 = 1.0/32.0;
+			    half gauss1 = 5.0/32.0;
+			    half gauss2 =15.0/32.0;
+			    half gauss3 =22.0/32.0;
 			    float4 gaussFilter[7];
+
 			    gaussFilter[0]  = float4( -3.0*texScaler , 0.0, 0.0, gauss0); 
 			    gaussFilter[1]  = float4( -2.0*texScaler , 0.0, 0.0, gauss1); 
 			    gaussFilter[2]  = float4( -1.0*texScaler , 0.0, 0.0, gauss2); 
 			    gaussFilter[3]  = float4(  0.0*texScaler , 0.0, 0.0, gauss3);
-			    gaussFilter[4]  = float4( +1.0*texScaler , 0.0, 0.0, gauss4);
-			    gaussFilter[5]  = float4( +2.0*texScaler , 0.0, 0.0, gauss5);
-			    gaussFilter[6]  = float4( +3.0*texScaler , 0.0, 0.0, gauss6);
+			    gaussFilter[4]  = float4( +1.0*texScaler , 0.0, 0.0, gauss2);
+			    gaussFilter[5]  = float4( +2.0*texScaler , 0.0, 0.0, gauss1);
+			    gaussFilter[6]  = float4( +3.0*texScaler , 0.0, 0.0, gauss0);
 			 
+			  	col += _LightColor0 *lighting +lighting * blighting *_SpecularIntensity *pow(specular,_Shininess) *specColor;
+
 			    int j;
 			    for (j=0;j<7;j++)
 			    {
@@ -121,9 +127,7 @@
 			    	col += tex2D(_MainTex, i.uv + gaussFilter[j].yx *_Bloom) * gaussFilter[j].w ;
 			    }
 
-			    col += _LightColor0 *lighting +lighting * blighting *_SpecularIntensity *pow(specular,_Shininess) *specColor;
-			
-				return  col = fixed4 (col.rgb* 0.5,0.414);;//fixed4 (i.viewDirInTangent,1);
+				return col*_BlurPower ;//fixed4 (i.viewDirInTangent,1);
 			}
 			ENDCG
 		}
