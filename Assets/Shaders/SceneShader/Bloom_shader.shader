@@ -1,4 +1,4 @@
-﻿Shader "场景/Bloom_shader"
+﻿Shader "场景/模糊"
 {
 	Properties
 	{

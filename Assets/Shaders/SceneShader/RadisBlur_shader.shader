@@ -1,4 +1,4 @@
-﻿Shader "场景/RadisBlur_shader"
+﻿Shader "场景/径向模糊"
 {
 	Properties
 	{

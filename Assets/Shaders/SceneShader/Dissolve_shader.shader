@@ -1,4 +1,4 @@
-﻿Shader "场景/Dissolve_shader"
+﻿Shader "场景/溶解"
 {
 	Properties
 	{
