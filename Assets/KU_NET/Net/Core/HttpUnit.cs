@@ -175,6 +175,7 @@ namespace Kubility
 			requestList = new Stack<MiniTuple<string, HttpType, object>>();
 			this.m_curRequest = new MiniTuple<string, HttpType, object>();
 			ErrorManager.mIns.Register<HttpUnit>(this);
+			System.Net.ServicePointManager.DefaultConnectionLimit=20;
 #if USE_COR
 #else
 			this.m_lock = new object();
